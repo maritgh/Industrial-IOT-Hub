@@ -40,7 +40,7 @@ void setup() {
 }
 
 void loop() {
-  // check if a peripheral has been discovered
+  // check if a peripheral has been discovere
   BLEDevice peripheral = BLE.available();
   if (peripheral) {
     // discovered a peripheral, print out address, local name, and advertised service
@@ -51,8 +51,8 @@ void loop() {
     Serial.print("' ");
     Serial.print(peripheral.advertisedServiceUuid());
     Serial.println();
-    BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
-      BLEDevice peripheral2 = BLE.available();
+    // BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
+    // BLEDevice peripheral2 = BLE.available();
 
     if (peripheral.localName() != "ESP32-WROOM-Button" && peripheral.localName() != "ESP32-C6-Button") {
       return;
@@ -69,13 +69,12 @@ void loop() {
     //controlLed(peripheral);
     // peripheral disconnected, start scanning again
     //BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
-    controlLed(peripheral, peripheral2);
+    controlLed(peripheral);
     BLE.scanForUuid("76288a9b-d488-4317-bdc1-5142a41cc0dc");
   }
-  Serial.println("stuck");
 }
 
-void controlLed(BLEDevice peripheral, BLEDevice peripheral2) {
+void controlLed(BLEDevice peripheral) {
   // connect to the peripheral
   Serial.println("Connecting ...");
 
@@ -85,12 +84,11 @@ void controlLed(BLEDevice peripheral, BLEDevice peripheral2) {
     Serial.println("Failed to connect!");
     return;
   }
-  if (peripheral2.connect()) {
-    Serial.println("Connected");
-  } else {
-    Serial.println("Failed to connect!");
-    return;
-  }
+  // if (peripheral2.connect()) {
+  //   Serial.println("Connected 2");
+  // } else {
+  //   Serial.println("Failed to connect! 2");
+  // }
 
   // discover peripheral attributes
   Serial.println("Discovering attributes ...");
@@ -102,17 +100,16 @@ void controlLed(BLEDevice peripheral, BLEDevice peripheral2) {
     return;
   }
 
-  Serial.println("Discovering attributes ...");
-  if (peripheral2.discoverAttributes()) {
-    Serial.println("Attributes 2 discovered");
-  } else {
-    Serial.println("Attribute 2 discovery failed!");
-    peripheral2.disconnect();
-    return;
-  }
+  // Serial.println("Discovering attributes ...");
+  // if (peripheral2.discoverAttributes()) {
+  //   Serial.println("Attributes 2 discovered");
+  // } else {
+  //   Serial.println("Attribute 2 discovery failed!");
+  //   peripheral2.disconnect();
+  // }
   // retrieve the LED characteristic
   BLECharacteristic ledCharacteristic = peripheral.characteristic("6a46a075-bcff-4290-bb1d-6620eb93c734");
-  BLECharacteristic button = peripheral2.characteristic("  520fd229-31ab-4e73-8741-a49f94f2a020");
+  //BLECharacteristic button = peripheral2.characteristic("  520fd229-31ab-4e73-8741-a49f94f2a020");
 
   // if (!button) {
   //   Serial.println("Peripheral does not have button characteristic!");
@@ -140,25 +137,25 @@ void controlLed(BLEDevice peripheral, BLEDevice peripheral2) {
 
       Serial.println("Received from esp c6: " + value);
     }
-    if (peripheral2.connected()) {
-      if (button.valueUpdated()) {
-        const uint8_t* rawValue = button.value();
-        String value = String((char*)rawValue);
+    // if (peripheral2.connected()) {
+    //   if (button.valueUpdated()) {
+    //     const uint8_t* rawValue = button.value();
+    //     String value = String((char*)rawValue);
 
-        if (value == "ON") {
-          digitalWrite(LED_PIN, LOW);
-        } else if (value == "OFF") {
-          digitalWrite(LED_PIN, HIGH);
-        }
+    //     if (value == "ON") {
+    //       digitalWrite(LED_PIN, LOW);
+    //     } else if (value == "OFF") {
+    //       digitalWrite(LED_PIN, HIGH);
+    //     }
 
 
-        Serial.println("Received from wroom: " + value);
-      }
-    } else {
-      Serial.println("Peripheral2 disconnected");
-      BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
-      peripheral2 = BLE.available();
-    }
+    //     Serial.println("Received from wroom: " + value);
+    //   }
+    // } else {
+    //   Serial.println("Peripheral2 disconnected");
+    //   BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
+    //   peripheral2 = BLE.available();
+    // }
   }
 
   Serial.println("Peripheral disconnected");
