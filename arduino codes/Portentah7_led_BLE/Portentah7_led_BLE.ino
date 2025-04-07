@@ -40,7 +40,7 @@ void setup() {
 }
 
 void loop() {
-  // check if a peripheral has been discovere
+  // check if a peripheral has been discovered
   BLEDevice peripheral = BLE.available();
   if (peripheral) {
     // discovered a peripheral, print out address, local name, and advertised service
@@ -51,8 +51,6 @@ void loop() {
     Serial.print("' ");
     Serial.print(peripheral.advertisedServiceUuid());
     Serial.println();
-    // BLE.scanForUuid("bee531ce-6518-48b8-b5fb-6c00d0009c9c");
-    // BLEDevice peripheral2 = BLE.available();
 
     if (peripheral.localName() != "ESP32-WROOM-Button" && peripheral.localName() != "ESP32-C6-Button") {
       return;
@@ -84,11 +82,6 @@ void controlLed(BLEDevice peripheral) {
     Serial.println("Failed to connect!");
     return;
   }
-  // if (peripheral2.connect()) {
-  //   Serial.println("Connected 2");
-  // } else {
-  //   Serial.println("Failed to connect! 2");
-  // }
 
   // discover peripheral attributes
   Serial.println("Discovering attributes ...");
@@ -100,16 +93,9 @@ void controlLed(BLEDevice peripheral) {
     return;
   }
 
-  // Serial.println("Discovering attributes ...");
-  // if (peripheral2.discoverAttributes()) {
-  //   Serial.println("Attributes 2 discovered");
-  // } else {
-  //   Serial.println("Attribute 2 discovery failed!");
-  //   peripheral2.disconnect();
-  // }
   // retrieve the LED characteristic
   BLECharacteristic ledCharacteristic = peripheral.characteristic("6a46a075-bcff-4290-bb1d-6620eb93c734");
-  //BLECharacteristic button = peripheral2.characteristic("  520fd229-31ab-4e73-8741-a49f94f2a020");
+  // BLECharacteristic button = peripheral2.characteristic("  520fd229-31ab-4e73-8741-a49f94f2a020");
 
   // if (!button) {
   //   Serial.println("Peripheral does not have button characteristic!");
