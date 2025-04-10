@@ -1,10 +1,11 @@
 #include <ArduinoBLE.h>
 
+#define BUTTON_PIN 3 4
+#define ledPin 2
+
 BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214");  // BLE LED Service
 
 BLEByteCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify);
-const int ledPin = 2;  // pin to use for the LED
-unsigned long last_time = 0;
 
 void ConnectHandler(BLEDevice central) {
   // central connected event handler
@@ -19,6 +20,18 @@ void DisconnectHandler(BLEDevice central) {
   Serial.println(central.address());
   BLE.advertise();
 }
+void IRAM_ATTR buttonPressed() {
+  if (!switchCharacteristic.value()) {
+        switchCharacteristic.writeValue(1);
+        Serial.println("LED on");
+        digitalWrite(ledPin, HIGH);
+    } else {
+        switchCharacteristic.writeValue(0);
+        Serial.println("LED off");
+        digitalWrite(ledPin, LOW);
+    }
+}
+
 
 void setup() {
     Serial.begin(9600);
@@ -27,6 +40,9 @@ void setup() {
 
     // set LED pin to output mode
     pinMode(ledPin, OUTPUT);
+    pinMode(BUTTON_PIN, INPUT);
+    attachInterrupt(BUTTON_PIN, buttonPressed, FALLING);
+
 
     // begin initialization
     if (!BLE.begin()) {
@@ -56,19 +72,6 @@ void setup() {
 }
 
 void loop() {
-  unsigned long current_time = millis();
   BLE.poll();
-  if(current_time - last_time > 10000){ 
-    last_time = current_time;
-    //Sensor Code/Functions would go here
-    if (!switchCharacteristic.value()) {
-        switchCharacteristic.writeValue(1);
-        Serial.println("LED on");
-        digitalWrite(ledPin, HIGH);
-    } else {
-        switchCharacteristic.writeValue(0);
-        Serial.println("LED off");
-        digitalWrite(ledPin, LOW);
-    }
-  } 
+  
 }

@@ -2,6 +2,13 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include "Arduino_NiclaSenseEnv.h"
+
+NiclaSenseEnv device;
+#define SDA_PIN 5
+#define SCL_PIN 6
+#define BUTTON_PIN 3  
+#define ledPin 2
 
 
 BLEServer* pServer = nullptr;
@@ -11,8 +18,8 @@ bool deviceConnected = false;
 bool oldValue = false;
 unsigned long last_time = 0;
 String temp = "0";
+float temperature, humidity;
 
-const int ledPin = 2;  // GPIO for LED
 
 #define SERVICE_UUID        "e7f61469-a5b2-4eed-ad9f-4c06eb5ecd01"
 #define CHARACTERISTIC_UUID "e7f61469-a5b2-4eed-ad9f-4c06eb5ecd01"
@@ -30,8 +37,33 @@ class MyServerCallbacks : public BLEServerCallbacks {
   }
 };
 
+void IRAM_ATTR buttonPressed() {
+
+    String temp = String(temperature);
+    pCharacteristic->setValue(temp.c_str());
+    pCharacteristic->notify();
+    temp = String(humidity);
+    pCharacteristic->setValue(temp.c_str());
+    pCharacteristic->notify();
+    Serial.println("button pressed!");
+
+}
+
 void setup() {
-  Serial.begin(9600);
+  pinMode(BUTTON_PIN, INPUT);
+  Serial.begin(115200);
+  Wire.begin(SDA_PIN, SCL_PIN); 
+
+  attachInterrupt(BUTTON_PIN, buttonPressed, FALLING);
+  if (device.begin()) {
+    Serial.println("- Nicla Sense Env is connected!");
+
+        // Enable the outdoor air quality sensor
+    device.outdoorAirQualitySensor().setEnabled(true);  
+  } else {
+        // Error message if the Nicla Sense Env is not found
+    Serial.println("- ERROR: Nicla Sense Env device not found!");
+  } 
   pinMode(ledPin, OUTPUT);
 
   BLEDevice::init("BUTTON");
@@ -59,17 +91,27 @@ void setup() {
 void loop() {
   unsigned long current_time = millis();
   if (deviceConnected && (current_time - last_time > 10000)) {
+    TemperatureHumiditySensor& tempHumSensor = device.temperatureHumiditySensor();
+    OutdoorAirQualitySensor& airQualitySensor = device.outdoorAirQualitySensor();
+
+  if (tempHumSensor.enabled()){
+      temperature = tempHumSensor.temperature();
+      humidity = tempHumSensor.humidity();
+  } else {
+    Serial.println("- ERROR: TemperatureHumiditySensor sensor is disabled!");
+
+  }
     last_time = current_time;
 
     // Toggle value
-    bool newValue = !oldValue;
-    oldValue = newValue;
+    // bool newValue = !oldValue;
+    // oldValue = newValue;
 
-    uint8_t value = newValue ? 1 : 0;
-    pCharacteristic->setValue(&value, 1);
-    pCharacteristic->notify();
+    // uint8_t value = newValue ? 1 : 0;
+    // pCharacteristic->setValue(&value, 1);
+    // pCharacteristic->notify();
 
-    digitalWrite(ledPin, newValue ? HIGH : LOW);
-    Serial.println(newValue ? "LED on" : "LED off");
+    // digitalWrite(ledPin, newValue ? HIGH : LOW);
+    // Serial.println(newValue ? "LED on" : "LED off");
   }
 }
