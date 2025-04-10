@@ -2,7 +2,7 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
-#define BUTTON_PIN 3  // Adjust based on your wiring
+#define BUTTON_PIN 4  // Adjust based on your wiring
 
 BLEServer *pServer = nullptr;
 BLECharacteristic *pCharacteristic;
