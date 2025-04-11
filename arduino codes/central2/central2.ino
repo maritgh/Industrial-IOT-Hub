@@ -60,9 +60,10 @@ void loop() {
 
   if (buttonConnected && buttonPeripheral.connected()) {
     if (buttonCharacteristic.valueUpdated()) {
-      byte value;
-      buttonCharacteristic.readValue(value);
-      Serial.print("BUTTON Value: ");
+
+      const uint8_t* rawValue = buttonCharacteristic.value();
+      String value = String((char*)rawValue);
+      Serial.print("Temperature Value: ");
       Serial.println(value);
     }
   } else if (buttonConnected && !buttonPeripheral.connected()) {

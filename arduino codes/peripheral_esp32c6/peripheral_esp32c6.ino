@@ -8,7 +8,6 @@ NiclaSenseEnv device;
 #define SDA_PIN 5
 #define SCL_PIN 6
 #define BUTTON_PIN 3  
-#define ledPin 2
 
 
 BLEServer* pServer = nullptr;
@@ -40,11 +39,12 @@ class MyServerCallbacks : public BLEServerCallbacks {
 void IRAM_ATTR buttonPressed() {
 
     String temp = String(temperature);
+    Serial.println(temperature);
     pCharacteristic->setValue(temp.c_str());
     pCharacteristic->notify();
-    temp = String(humidity);
-    pCharacteristic->setValue(temp.c_str());
-    pCharacteristic->notify();
+    // String hum = String(humidity);
+    // pCharacteristic->setValue(hum.c_str());
+    // pCharacteristic->notify();
     Serial.println("button pressed!");
 
 }
@@ -64,7 +64,6 @@ void setup() {
         // Error message if the Nicla Sense Env is not found
     Serial.println("- ERROR: Nicla Sense Env device not found!");
   } 
-  pinMode(ledPin, OUTPUT);
 
   BLEDevice::init("BUTTON");
   pServer = BLEDevice::createServer();

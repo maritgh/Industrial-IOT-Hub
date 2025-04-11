@@ -1,6 +1,6 @@
 #include <ArduinoBLE.h>
 
-#define BUTTON_PIN 3 4
+#define BUTTON_PIN 4
 #define ledPin 2
 
 BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214");  // BLE LED Service
