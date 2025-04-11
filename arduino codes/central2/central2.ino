@@ -28,8 +28,6 @@ void loop() {
 
     if (peripheral) {
       String name = peripheral.localName();
-      Serial.print("Found device: ");
-      Serial.println(name);
 
       if (name == "LED" && !ledConnected) {
         if (connectPeripheral(peripheral, "19b10001-e8f2-537e-4f6c-d104768a1214", ledPeripheral, ledCharacteristic)) {
@@ -63,6 +61,7 @@ void loop() {
 
       const uint8_t* rawValue = buttonCharacteristic.value();
       String value = String((char*)rawValue);
+      value.remove(5);
       Serial.print("Temperature Value: ");
       Serial.println(value);
     }
@@ -101,8 +100,6 @@ bool connectPeripheral(BLEDevice& peripheral, const char* charUUID, BLEDevice& o
     peripheral.disconnect();
     return false;
   }
-  Serial.print("Characteristic properties: ");
-  Serial.println(characteristic.properties(), HEX);
 
 
   if (!characteristic.subscribe()) {
