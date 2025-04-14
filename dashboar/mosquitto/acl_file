@@ -1,5 +1,0 @@
-pattern readwrite #
-# User access control
-
-user username
-topic readwrite #
