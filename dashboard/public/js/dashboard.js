@@ -1,6 +1,4 @@
-const express = require('express');
-const { InfluxDB } = require('influx');
-const app = express();
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
@@ -284,8 +282,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-   
-    // Simulate incoming data for demo purposes
     function simulateDataStream() {
         setInterval(() => {
             const data = {
@@ -294,41 +290,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 power: Math.random() * (15 - 10) + 10,
                 status: Math.random() > 0.8 ? 'Warning' : 'Normal'
             };
-
-            app.post('/api/write', express.json(), async (req, res) => {
-                const { temperature, humidity, power } = req.body;
-              
-                try {
-                  await influx.writePoints([
-                    {
-                      measurement: 'sensors',
-                      tags: { sensor_data: 'temperature' },
-                      fields: { value: temperature },
-                      timestamp: new Date()
-                    },
-                    {
-                      measurement: 'sensors',
-                      tags: { sensor_data: 'humidity' },
-                      fields: { value: humidity },
-                      timestamp: new Date()
-                    },
-                    {
-                      measurement: 'sensors',
-                      tags: { sensor_data: 'power' },
-                      fields: { value: power },
-                      timestamp: new Date()
-                    }
-                  ]);
-                  res.sendStatus(200);
-                } catch (err) {
-                  console.error('Influx write error:', err);
-                  res.sendStatus(500);
-                }
-              });
-              
-              app.listen(3000, () => console.log('Server running on port 3000'));
-          });
+    
+            processIncomingData('stedin/data/' + currentLocation, data);
+        }, 5000); // every 5 seconds
     }
+    
               
     // Handle location selection
     locationCards.forEach(card => {
@@ -397,31 +363,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     logoutBtn.addEventListener('click', logout);
     dashboardLogoutBtn.addEventListener('click', logout);
-});
-
-const influx = new InfluxDB({
-    host: 'localhost',
-    database: 'stedin',
-    username: 'admin',
-    password: 'yourpassword',
-    schema: [
-        {
-            measurement: 'sensors',
-            fields: { value: 'float' },
-            tags: ['sensor_data']
-        }
-    ]
-});
-
-// Test the connection
-influx.ping(5000).then(hosts => {
-    hosts.forEach(host => {
-        if (host.online) {
-            console.log(`Connected to InfluxDB at ${host.url.host}`);
-        } else {
-            console.error(`InfluxDB at ${host.url.host} is offline`);
-        }
-    });
-}).catch(err => {
-    console.error('Error connecting to InfluxDB:', err);
 });
