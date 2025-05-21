@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <CAN.h>
 
-#define TX_GPIO_NUM   5
-#define RX_GPIO_NUM   4
+#define TX_GPIO_NUM   38
+#define RX_GPIO_NUM   40
 
 void setup() {
     Serial.begin (115200);
