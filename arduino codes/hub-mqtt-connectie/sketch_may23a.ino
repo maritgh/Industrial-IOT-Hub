@@ -1,106 +1,137 @@
 #include <ArduinoBLE.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
 
-const char* mqtt_server = "192.168.178.165";  // Laptop IP
-const int mqtt_port = 1883;
-const char* mqtt_user = "username";
-const char* mqtt_pass = "henk";
+BLEDevice ledPeripheral;
+BLECharacteristic ledCharacteristic;
+bool ledConnected = false;
 
-// setup clients
-WiFiClient espClient;
-PubSubClient client(espClient);
+BLEDevice buttonPeripheral;
+BLECharacteristic buttonCharacteristic;
+bool buttonConnected = false;
 
-// WiFi gegevens
-const char* ssid = "robotserver";
-const char* password = "henkhenk";
-
-// HTTP server
-WiFiServer server(8080);
+BLEDevice pressurePeripheral;
+BLECharacteristic pressureCharacteristic;
+bool pressureConnected = false;
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial);
+  Serial.begin(9600);
+  while (!Serial)
+    ;
 
-  // Verbinden met WiFi
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  if (!BLE.begin()) {
+    Serial.println("BLE failed to start");
+    while (1)
+      ;
   }
 
-  Serial.println("\nWiFi connected!");
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println("BLE Central - Scanning for LED, BUTTON, and PRESSURE devices");
 
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
-  connectToMQTT();
-
-  server.begin();
-
+  BLE.scan();
 }
 
 void loop() {
-  client.loop();
-  float temp = random(2000, 2100) / 100.0;  //temp = temperature hum = humidity
-  float hum  = 40.1;                        //
-  delay(3000);                              //Jullie moeten dit implementeren dat hij publishsensordata() doet wanneer je data van de sensoren binnenkrijgt op het hub
-  publishSensorData(temp, hum);             //stuurt data naar de mqtt broker op topic "sensor/data"
-}
+  if (!ledConnected || !buttonConnected || !pressureConnected) {
+    BLEDevice peripheral = BLE.available();
 
+    if (peripheral) {
+      String name = peripheral.localName();
 
-//hier niet aan zitten aub
-void connectToMQTT() {
-  Serial.print("Connecting to MQTT...");
-  while (!client.connected()) {
-    if (client.connect("portentaClient", mqtt_user, mqtt_pass)) {
-      Serial.println(" connected!");
-
-      if (client.subscribe("sensor/data")) {
-        Serial.println("✓ Subscribed to sensor/data");
-      } else {
-        Serial.println("✗ Failed to subscribe to sensor/data");
+      if (name == "LED" && !ledConnected) {
+        if (connectPeripheral(peripheral, "19b10001-e8f2-537e-4f6c-d104768a1214", ledPeripheral, ledCharacteristic)) {
+          ledConnected = true;
+          Serial.println("LED device connected");
+        }
+      } else if (name == "BUTTON" && !buttonConnected) {
+        if (connectPeripheral(peripheral, "e7f61469-a5b2-4eed-ad9f-4c06eb5ecd01", buttonPeripheral, buttonCharacteristic)) {
+          buttonConnected = true;
+          Serial.println("BUTTON device connected");
+        }
+      } else if (name == "PRESSURE" && !pressureConnected) {
+        if (connectPeripheral(peripheral, "b4f142ab-edae-4a52-b90b-4d9e7edb1d10", pressurePeripheral, pressureCharacteristic)) {
+          pressureConnected = true;
+          Serial.println("PRESSURE device connected");
+        }
       }
-
-    } else {
-      Serial.print(" failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 2 seconds");
-      delay(2000);
     }
   }
-}
 
+  if (ledConnected && ledPeripheral.connected()) {
+    if (ledCharacteristic.valueUpdated()) {
+      byte value;
+      ledCharacteristic.readValue(value);
+      Serial.print("LED Value: ");
+      Serial.println(value);
+    }
+  } else if (ledConnected && !ledPeripheral.connected()) {
+    Serial.println("LED peripheral disconnected");
+    ledConnected = false;
+    BLE.scan();
+  }
 
-//hier niet aan zitten aub 
-void publishSensorData(float temp, float hum) {
-  char payload[100];
-  snprintf(payload, sizeof(payload), "{\"temp\": %.2f, \"hum\": %.2f}", temp, hum);
+  if (buttonConnected && buttonPeripheral.connected()) {
+    if (buttonCharacteristic.valueUpdated()) {
+      const uint8_t* rawValue = buttonCharacteristic.value();
+      String value = String((char*)rawValue);
+      value.remove(5);
+      Serial.print("Button Temperature Value: ");
+      Serial.println(value);
+    }
+  } else if (buttonConnected && !buttonPeripheral.connected()) {
+    Serial.println("BUTTON peripheral disconnected");
+    buttonConnected = false;
+    BLE.scan();
+  }
 
-  Serial.print("Publishing to sensor/data: ");
-  Serial.println(payload);
-  Serial.print("Payload length: ");
-  Serial.println(strlen(payload));
-
-  bool result = client.publish("sensor/data", payload, false);
-
-  if (result) {
-    Serial.println("✓ Publish successful");
-  } else {
-    Serial.println("✗ Publish failed");
-    Serial.print("Client state: ");
-    Serial.println(client.state());
+  if (pressureConnected && pressurePeripheral.connected()) {
+    if (pressureCharacteristic.valueUpdated()) {
+      const uint8_t* rawValue = pressureCharacteristic.value();
+      String value = String((char*)rawValue);
+      value.remove(5);  // optional: remove extra digits if needed
+      Serial.print("Pressure Value: ");
+      Serial.println(value);
+    }
+  } else if (pressureConnected && !pressurePeripheral.connected()) {
+    Serial.println("PRESSURE peripheral disconnected");
+    pressureConnected = false;
+    BLE.scan();
   }
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
+bool connectPeripheral(BLEDevice& peripheral, const char* charUUID, BLEDevice& outDevice, BLECharacteristic& outChar) {
+  Serial.print("Connecting to ");
+  Serial.println(peripheral.localName());
+
+  if (!peripheral.connect()) {
+    Serial.println("Failed to connect");
+    return false;
   }
-  Serial.println();
+
+  if (!peripheral.discoverAttributes()) {
+    Serial.println("Attribute discovery failed");
+    peripheral.disconnect();
+    return false;
+  }
+
+  BLECharacteristic characteristic = peripheral.characteristic(charUUID);
+
+  if (!characteristic) {
+    Serial.println("Characteristic not found");
+    peripheral.disconnect();
+    return false;
+  }
+
+  if (!characteristic.canSubscribe()) {
+    Serial.println("Cannot subscribe to characteristic");
+    peripheral.disconnect();
+    return false;
+  }
+
+  if (!characteristic.subscribe()) {
+    Serial.println("Failed to subscribe");
+    peripheral.disconnect();
+    return false;
+  }
+
+  outDevice = peripheral;
+  outChar = characteristic;
+  return true;
 }
