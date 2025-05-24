@@ -44,6 +44,8 @@ First, install the necessary Python packages:
 
 ```bash
 pip install influxdb-client paho-mqtt
+pip3 install flask-cors
+
 ```
 
 Next, you need to edit the `backend/collector.py` file to include your InfluxDB connection details. Open the file and update the following variables:

@@ -24,6 +24,6 @@ def on_message(mqtt_client, userdata, msg):
 
 mqtt_client = mqtt.Client()
 mqtt_client.on_message = on_message
-mqtt_client.connect("localhost", 1883, 60)
+mqtt_client.connect("192.168.178.165", 1883, 60)
 mqtt_client.subscribe("sensor/data")
 mqtt_client.loop_forever()

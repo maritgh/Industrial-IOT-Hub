@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfluxDB Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        h1 {
+            margin-bottom: 30px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-connected {
+            background-color: #28a745;
+        }
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+        .api-status {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .time-range-display {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Sensor Data Dashboard</h1>
+        
+        <div class="api-status text-center">
+            <span class="status-indicator status-disconnected" id="apiStatus"></span>
+            <span id="apiStatusText">Checking API connection...</span>
+        </div>
+        
+        <div class="time-range-display" id="timeRangeDisplay">
+            Loading time range...
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="chart-header">
+                        <h3>Temperature</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="temperatureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="chart-header">
+                        <h3>Humidity</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="humidityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API configuration - CHANGE THIS TO MATCH YOUR BACKEND URL
+        const API_BASE_URL = "http://localhost:5000/api";
+        
+        // Global chart objects
+        let temperatureChart;
+        let humidityChart;
+
+        // Chart colors
+        const tempColor = 'rgba(255, 99, 132, 0.7)';
+        const humidityColor = 'rgba(54, 162, 235, 0.7)';
+
+        // Check API connection and get time range
+        async function checkApiConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('apiStatus').classList.remove('status-disconnected');
+                    document.getElementById('apiStatus').classList.add('status-connected');
+                    document.getElementById('apiStatusText').textContent = 'Connected to API';
+                    
+                    // Update time range display
+                    if (data.fixed_time_range) {
+                        document.getElementById('timeRangeDisplay').textContent = 
+                            `Displaying data from: ${data.fixed_time_range.start} to ${data.fixed_time_range.end}`;
+                    }
+                    
+                    return true;
+                } else {
+                    throw new Error('API responded with an error');
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').classList.remove('status-connected');
+                document.getElementById('apiStatus').classList.add('status-disconnected');
+                document.getElementById('apiStatusText').textContent = 'API Connection Failed - Make sure your backend is running';
+                console.error('API connection error:', error);
+                return false;
+            }
+        }
+
+        // Fetch temperature data
+        async function fetchTemperatureData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/temperature`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching temperature data:', error);
+                return [];
+            }
+        }
+
+        // Fetch humidity data
+        async function fetchHumidityData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/humidity`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching humidity data:', error);
+                return [];
+            }
+        }
+
+        // Initialize temperature chart
+        async function initTemperatureChart() {
+            const data = await fetchTemperatureData();
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            
+            temperatureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.time),
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: data.map(item => item.value),
+                        borderColor: tempColor,
+                        backgroundColor: tempColor,
+                        tension: 0.1,
+                        pointRadius: 2,
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize humidity chart
+        async function initHumidityChart() {
+            const data = await fetchHumidityData();
+            const ctx = document.getElementById('humidityChart').getContext('2d');
+            
+            humidityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(item => item.time),
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: data.map(item => item.value),
+                        borderColor: humidityColor,
+                        backgroundColor: humidityColor,
+                        tension: 0.1,
+                        pointRadius: 2,
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Humidity (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize both charts when the page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // First check API connection
+            const isConnected = await checkApiConnection();
+            
+            if (isConnected) {
+                // Initialize charts if API is connected
+                initTemperatureChart();
+                initHumidityChart();
+                
+                // Set up auto-refresh every minute
+                setInterval(async () => {
+                    const tempData = await fetchTemperatureData();
+                    temperatureChart.data.labels = tempData.map(item => item.time);
+                    temperatureChart.data.datasets[0].data = tempData.map(item => item.value);
+                    temperatureChart.update();
+                    
+                    const humidityData = await fetchHumidityData();
+                    humidityChart.data.labels = humidityData.map(item => item.time);
+                    humidityChart.data.datasets[0].data = humidityData.map(item => item.value);
+                    humidityChart.update();
+                }, 60000); // Refresh every 60 seconds
+                
+            } else {
+                // Show error message if API is not connected
+                document.getElementById('temperatureChart').innerHTML = 'Cannot connect to API';
+                document.getElementById('humidityChart').innerHTML = 'Cannot connect to API';
+            }
+        });
+    </script>
+</body>
+</html>

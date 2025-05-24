@@ -7,6 +7,37 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Additional styles for API status */
+        .api-status {
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-connected {
+            background-color: #28a745;
+        }
+        
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+        
+        .time-range-display {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -77,6 +108,15 @@
                     <span>Logged in as: <strong id="dashboard-user"></strong></span>
                     <button id="dashboard-logout-btn">Logout</button>
                 </div>
+            </div>
+            
+            <div class="api-status text-center">
+                <span class="status-indicator status-disconnected" id="apiStatus"></span>
+                <span id="apiStatusText">Checking API connection...</span>
+            </div>
+            
+            <div class="time-range-display" id="timeRangeDisplay">
+                Loading time range...
             </div>
             
             <div class="dashboard-content">
