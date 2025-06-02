@@ -6,7 +6,6 @@
   - [Table of Contents](#table-of-contents)
   - [Project Overview](#project-overview)
   - [Repository Structure](#repository-structure)
-        - [Usage Guides](#usage-guides)
   - [Purpose of the Repository](#purpose-of-the-repository)
   - [Key Features](#key-features)
   - [Contributors](#contributors)
@@ -40,7 +39,8 @@ The repository is organized into the following folders and files:
 
 - **README.md**  
   This file, providing an overview of the project and instructions on where to find more information.
-##### Usage Guides
+
+**Usage Guides**
 
 - [General Usage Guide](markdown/Usage-guide.md).
   General setup of the project
