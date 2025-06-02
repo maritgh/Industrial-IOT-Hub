@@ -7,7 +7,6 @@
   - [Project Overview](#project-overview)
   - [Repository Structure](#repository-structure)
         - [Usage Guides](#usage-guides)
-  - [Documenation specifically for the Dashboard and the Database](#documenation-specifically-for-the-dashboard-and-the-database)
   - [Purpose of the Repository](#purpose-of-the-repository)
   - [Key Features](#key-features)
   - [Contributors](#contributors)
@@ -45,10 +44,13 @@ The repository is organized into the following folders and files:
 
 - [General Usage Guide](markdown/Usage-guide.md).
   General setup of the project
+
 - [Arduino Usage Guide](markdown/ArduinoUsage.md).
   Documenation specifically for the Arduino
+
 - [Dashboard Usage Guide](markdown/DashboardUsage.md).
   Documenation specifically for the Dashboard and the Database
+  
 ---
 
 ## Purpose of the Repository
