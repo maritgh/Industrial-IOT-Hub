@@ -7,7 +7,7 @@ INFLUX_URL = "http://host.docker.internal:8086"
 TOKEN = "QNU9pj1aTm-fipRW9ZkU5eYvfdAOfVC7pwhX5jdN-lTsx6ZluEIyQyn38oSgRXdG2SSGuVxwnWxPCRFC5wxNvg=="
 ORG = "stedin"
 BUCKET = "data"
-ipadress = "host.docker.internal"
+ip_adress = "192.168.178.165" #verander dit naar je ipv4 adress
 
 
 client = InfluxDBClient(url=INFLUX_URL, token=TOKEN, org=ORG)
@@ -40,6 +40,6 @@ def on_message(mqtt_client, userdata, msg):
 
 mqtt_client = mqtt.Client()
 mqtt_client.on_message = on_message
-mqtt_client.connect("192.168.178.165", 1883, 60)
+mqtt_client.connect(ip_adress, 1883, 60)
 mqtt_client.subscribe("sensor/data")
 mqtt_client.loop_forever()
