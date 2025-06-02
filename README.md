@@ -63,7 +63,18 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
 
 ## Contributors
 
-- **Derk O.** – Developed the Data Flow from the IOT-hub through the database and dashboard
+
+* **Derk O.**
+
+  1. Developed MQTT integration for secure data transmission to the Mosquitto broker.
+  2. Created a Python-based collector to forward data into InfluxDB.
+  3. Designed and implemented the InfluxDB time-series database setup.
+  4. Built and styled a real-time dashboard using a Flask API, served through NGINX.
+  5. Dockerized all services to ensure consistent and portable deployment.
+  6. Created the project architecture and setup documentation, including the main README and usage guides.
+
+
+(jullie moeten zelf iets voor jezelf invullen)
 - **Femke H.** – Database setup, research, and documentation  
 - **Marit S.** – Arduino design, testing, and documentation  
 - **Subaydah M.** – Arduino setup, testing, frontend integration, and documentation  
@@ -72,3 +83,14 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
 For questions or contributions, please open an issue on GitHub.
 
 ---
+
+
+
+Designed and implemented the complete data pipeline for an Industrial IoT system:
+
+* Collected environmental sensor data using an ESP32-based IoT hub.
+* Transmitted data securely via MQTT to a Mosquitto broker.
+* Used a Python collector to forward the data into InfluxDB.
+* Built a real-time dashboard powered by a Flask API and served via NGINX.
+* Dockerized all services for consistent deployment
+* Created structured documentation and README for ease of use and replication
