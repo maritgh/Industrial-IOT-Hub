@@ -26,7 +26,7 @@ Each ESP32 collects sensor data and sends it to the central Arduino hub. From th
 This project focuses on researching how data collection from these hubs can be done **more efficiently**. Instead of delivering a complete product, our mission is to **explore potential improvements**. These insights can later be further developed or scaled.
 
 
-
+![Network Flow](images/example.png)
 
 ---
 
