@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # InfluxDB configuration
-INFLUX_URL = "http://192.168.178.165:8086"
+INFLUX_URL = "http://host.docker.internal:8086"
 TOKEN = "8eYfRmBQIkGmfYFewISeBXNv1d5PItUFyK3i5ZWeqEUy-o7zrvsREIz4o9PlGGdVu2yoEJiFbvKIanhwJyeYag=="
 ORG = "stedin"
 BUCKET = "data"

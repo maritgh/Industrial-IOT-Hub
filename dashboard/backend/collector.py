@@ -3,10 +3,12 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import paho.mqtt.client as mqtt
 import json
 
-INFLUX_URL = "http://192.168.178.165:8086"
+INFLUX_URL = "http://host.docker.internal:8086"
 TOKEN = "QNU9pj1aTm-fipRW9ZkU5eYvfdAOfVC7pwhX5jdN-lTsx6ZluEIyQyn38oSgRXdG2SSGuVxwnWxPCRFC5wxNvg=="
 ORG = "stedin"
 BUCKET = "data"
+ipadress = "host.docker.internal"
+
 
 client = InfluxDBClient(url=INFLUX_URL, token=TOKEN, org=ORG)
 write_api = client.write_api(write_options=SYNCHRONOUS)

@@ -89,6 +89,7 @@ void publishSensorData(float temp, float hum) {
     Serial.println("✗ Publish failed");
     Serial.print("Client state: ");
     Serial.println(client.state());
+    connectToMQTT();//retry
   }
 }
 
