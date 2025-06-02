@@ -48,15 +48,64 @@
             font-size: 16px;
             color: #666;
         }
+        .time-range-controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .time-range-controls .btn {
+            margin: 0 5px 5px 0;
+        }
+        .btn-time-range.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .auto-refresh-control {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .refresh-indicator {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .last-updated {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">Sensor Data Dashboard</h1>
+        <h1 class="text-center">Live Sensor Data Dashboard</h1>
         
         <div class="api-status text-center">
             <span class="status-indicator status-disconnected" id="apiStatus"></span>
             <span id="apiStatusText">Checking API connection...</span>
+        </div>
+        
+        <div class="time-range-controls">
+            <button class="btn btn-outline-primary btn-time-range active" data-range="5m">Last 5 Minutes</button>
+            <button class="btn btn-outline-primary btn-time-range" data-range="1h">Last Hour</button>
+            <button class="btn btn-outline-primary btn-time-range" data-range="3h">Last 3 Hours</button>
+            <button class="btn btn-outline-primary btn-time-range" data-range="24h">Last 24 Hours</button>
+        </div>
+        
+        <div class="auto-refresh-control">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                <label class="form-check-label" for="autoRefresh">
+                    Auto-refresh every 30 seconds
+                </label>
+                <span class="refresh-indicator" id="refreshIndicator"></span>
+            </div>
+        </div>
+        
+        <div class="last-updated" id="lastUpdated">
+            Never updated
         </div>
         
         <div class="time-range-display" id="timeRangeDisplay">
@@ -99,27 +148,21 @@
         // Global chart objects
         let temperatureChart;
         let humidityChart;
+        let currentTimeRange = '5m';
+        let autoRefreshInterval;
 
         // Chart colors
         const tempColor = 'rgba(255, 99, 132, 0.7)';
         const humidityColor = 'rgba(54, 162, 235, 0.7)';
 
-        // Check API connection and get time range
+        // Check API connection
         async function checkApiConnection() {
             try {
                 const response = await fetch(`${API_BASE_URL}/status`);
                 if (response.ok) {
-                    const data = await response.json();
                     document.getElementById('apiStatus').classList.remove('status-disconnected');
                     document.getElementById('apiStatus').classList.add('status-connected');
                     document.getElementById('apiStatusText').textContent = 'Connected to API';
-                    
-                    // Update time range display
-                    if (data.fixed_time_range) {
-                        document.getElementById('timeRangeDisplay').textContent = 
-                            `Displaying data from: ${data.fixed_time_range.start} to ${data.fixed_time_range.end}`;
-                    }
-                    
                     return true;
                 } else {
                     throw new Error('API responded with an error');
@@ -133,10 +176,34 @@
             }
         }
 
+        // Update time range display
+        function updateTimeRangeDisplay() {
+            const now = new Date();
+            let startTime;
+            
+            switch(currentTimeRange) {
+                case '5m':
+                    startTime = new Date(now.getTime() - 5 * 60 * 1000);
+                    break;
+                case '1h':
+                    startTime = new Date(now.getTime() - 60 * 60 * 1000);
+                    break;
+                case '3h':
+                    startTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+                    break;
+                case '24h':
+                    startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                    break;
+            }
+            
+            document.getElementById('timeRangeDisplay').textContent = 
+                `Displaying data from: ${startTime.toLocaleString()} to ${now.toLocaleString()}`;
+        }
+
         // Fetch temperature data
         async function fetchTemperatureData() {
             try {
-                const response = await fetch(`${API_BASE_URL}/temperature`);
+                const response = await fetch(`${API_BASE_URL}/temperature?range=${currentTimeRange}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -151,7 +218,7 @@
         // Fetch humidity data
         async function fetchHumidityData() {
             try {
-                const response = await fetch(`${API_BASE_URL}/humidity`);
+                const response = await fetch(`${API_BASE_URL}/humidity?range=${currentTimeRange}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -168,10 +235,14 @@
             const data = await fetchTemperatureData();
             const ctx = document.getElementById('temperatureChart').getContext('2d');
             
+            if (temperatureChart) {
+                temperatureChart.destroy();
+            }
+            
             temperatureChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(item => item.time),
+                    labels: data.map(item => new Date(item.time).toLocaleTimeString()),
                     datasets: [{
                         label: 'Temperature (°C)',
                         data: data.map(item => item.value),
@@ -199,6 +270,11 @@
                                 text: 'Time'
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
                     }
                 }
             });
@@ -209,10 +285,14 @@
             const data = await fetchHumidityData();
             const ctx = document.getElementById('humidityChart').getContext('2d');
             
+            if (humidityChart) {
+                humidityChart.destroy();
+            }
+            
             humidityChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(item => item.time),
+                    labels: data.map(item => new Date(item.time).toLocaleTimeString()),
                     datasets: [{
                         label: 'Humidity (%)',
                         data: data.map(item => item.value),
@@ -242,38 +322,93 @@
                                 text: 'Time'
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
                     }
                 }
             });
         }
 
-        // Initialize both charts when the page loads
+        // Update both charts
+        async function updateCharts() {
+            updateTimeRangeDisplay();
+            await initTemperatureChart();
+            await initHumidityChart();
+            
+            // Update last updated time
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // Show refresh indicator
+        function showRefreshIndicator() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.textContent = '🔄 Refreshing...';
+            indicator.style.color = '#007bff';
+        }
+
+        // Hide refresh indicator
+        function hideRefreshIndicator() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.textContent = '';
+        }
+
+        // Setup auto-refresh
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(async () => {
+                    showRefreshIndicator();
+                    await updateCharts();
+                    hideRefreshIndicator();
+                }, 30000); // Refresh every 30 seconds
+            }
+        }
+
+        // Initialize everything when the page loads
         document.addEventListener('DOMContentLoaded', async function() {
             // First check API connection
             const isConnected = await checkApiConnection();
             
             if (isConnected) {
-                // Initialize charts if API is connected
-                initTemperatureChart();
-                initHumidityChart();
+                // Initial load
+                await updateCharts();
                 
-                // Set up auto-refresh every minute
-                setInterval(async () => {
-                    const tempData = await fetchTemperatureData();
-                    temperatureChart.data.labels = tempData.map(item => item.time);
-                    temperatureChart.data.datasets[0].data = tempData.map(item => item.value);
-                    temperatureChart.update();
-                    
-                    const humidityData = await fetchHumidityData();
-                    humidityChart.data.labels = humidityData.map(item => item.time);
-                    humidityChart.data.datasets[0].data = humidityData.map(item => item.value);
-                    humidityChart.update();
-                }, 60000); // Refresh every 60 seconds
+                // Setup auto-refresh
+                setupAutoRefresh();
+                
+                // Handle auto-refresh checkbox changes
+                document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
+                
+                // Handle time range button clicks
+                document.querySelectorAll('.btn-time-range').forEach(button => {
+                    button.addEventListener('click', async function() {
+                        // Update active button
+                        document.querySelectorAll('.btn-time-range').forEach(btn => btn.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Update current time range
+                        currentTimeRange = this.getAttribute('data-range');
+                        
+                        // Update charts
+                        showRefreshIndicator();
+                        await updateCharts();
+                        hideRefreshIndicator();
+                    });
+                });
                 
             } else {
                 // Show error message if API is not connected
-                document.getElementById('temperatureChart').innerHTML = 'Cannot connect to API';
-                document.getElementById('humidityChart').innerHTML = 'Cannot connect to API';
+                document.getElementById('temperatureChart').innerHTML = '<p class="text-center mt-5">Cannot connect to API</p>';
+                document.getElementById('humidityChart').innerHTML = '<p class="text-center mt-5">Cannot connect to API</p>';
             }
         });
     </script>

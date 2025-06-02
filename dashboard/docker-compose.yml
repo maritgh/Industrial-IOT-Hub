@@ -26,7 +26,35 @@ services:
       - "1884:1884"  
     networks:
       - app-network
-      
+
+  dashboard_app:
+    image: python:3.11
+    working_dir: /app
+    volumes:
+      - ./RealTimeDashboard:/app
+    command: >
+      sh -c "pip install -r requirements.txt &&
+        python app.py"
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  data_collector:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "pip install influxdb-client paho-mqtt &&
+             python collector.py"
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+      - influxdb
   # Add InfluxDB service here
   influxdb:
     image: influxdb:latest
