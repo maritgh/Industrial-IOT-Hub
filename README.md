@@ -34,7 +34,7 @@ This project focuses on researching how data collection from these hubs can be d
 
 The repository is organized into the following folders and files:
 
-- **images/**  
+- **[images](images)**  
   Contains images and diagrams used in the documentation.
 
 - **README.md**  
@@ -46,9 +46,9 @@ The repository is organized into the following folders and files:
 
 This GitHub repository serves as the central hub for:
 - **Source code**: Including dashboard development and Arduino/ESP32 scripts.
-- **Documentation**: Project plans, test plans, experimental results, risk management strategies, and research analyses.
+- **Documentation**: Project plans, development tests, results, 
 
-For setup instructions, refer to the [Usage Guide](Usage-guide.md).
+For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
 
 ---
 
@@ -63,7 +63,7 @@ For setup instructions, refer to the [Usage Guide](Usage-guide.md).
 
 ## Contributors
 
-- **Derk O.** – Dashboard C# programming & documentation  
+- **Derk O.** – Developed the Data Flow from the IOT-hub through the database and dashboard
 - **Femke H.** – Database setup, research, and documentation  
 - **Marit S.** – Arduino design, testing, and documentation  
 - **Subaydah M.** – Arduino setup, testing, frontend integration, and documentation  

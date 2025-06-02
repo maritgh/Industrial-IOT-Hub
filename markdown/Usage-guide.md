@@ -8,8 +8,9 @@ The IoT Hub is responsible for collecting environmental sensor data (e.g., tempe
 
 To configure and deploy the IoT Hub system:
 
-
 For detailed setup steps, wiring diagrams, and code configuration, **please refer to the [Arduino Usage Guide](ArduinoUsage.md)**.
+
+> ⚠️ **Note:** Both the IoT Hub (ESP32s) and the dashboard machine must be connected to the same Wi-Fi network. This ensures that the devices can communicate with each other locally without requiring external routing. Each guide has its own tutorial for this
 
 ---
 
@@ -19,10 +20,10 @@ The dashboard is used to visualize the incoming data from all IoT Hubs in real-t
 
 To set up the dashboard:
 
-- Clone the repository and navigate to the dashboard folder.
-- Follow the installation instructions to run the frontend (built with [insert framework if applicable]).
-- Ensure that the dashboard is connected to the backend server or database receiving data from the IoT Hub.
-- Launch the dashboard in your browser to start monitoring live data.
+* Clone the repository and navigate to the dashboard folder.
+* Follow the installation instructions to run the frontend (built with \[insert framework if applicable]).
+* Ensure that the dashboard is connected to the backend server or database receiving data from the IoT Hub.
+* Launch the dashboard in your browser to start monitoring live data.
 
 For full installation and configuration instructions, **please refer to the [Dashboard Usage Guide](DashboardUsage.md)**.
 
