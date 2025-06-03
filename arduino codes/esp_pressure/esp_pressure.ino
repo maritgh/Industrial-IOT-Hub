@@ -12,7 +12,7 @@ BLEService pressureService("b4f142ab-edae-4a52-b90b-4d9e7edb1d10");
 BLEStringCharacteristic pressureCharacteristic("b4f142ab-edae-4a52-b90b-4d9e7edb1d10", BLERead | BLENotify, 20);
 
 void ConnectHandler(BLEDevice central) {
-  Serial.print("Connected: ");
+  Serial.print("Connected to BLE ");
   Serial.println(central.address());
 }
 
