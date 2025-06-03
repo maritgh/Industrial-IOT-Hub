@@ -32,7 +32,8 @@ def on_message(mqtt_client, userdata, msg):
         point = Point("environment") \
             .field("temperature", data["temp"]) \
             .field("humidity", data["hum"]) \
-            .field("status_code", data["status"])
+            .field("status_code", data["status"]) \
+            .field("pressure_status", data["pressure"])
         write_api.write(bucket=BUCKET, org=ORG, record=point)
         print(f"Stored: {data}")
     except Exception as e:

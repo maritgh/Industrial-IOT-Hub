@@ -205,6 +205,45 @@ def check_temperature_readings():
         logger.error(f"Temperature readings check failed: {str(e)}")
         return False
 
+#
+
+def check_pressure_readings():
+    """Check if we're getting recent pressure readings"""
+    try:
+        # Check for temperature data in the last 10 minutes
+        now = datetime.now(timezone.utc)
+        start_time = now - timedelta(minutes=10)
+        
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        query = f'''
+        from(bucket: "{BUCKET}")
+          |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+          |> filter(fn: (r) => r._field == "pressure_status" or r._measurement == "pressure_status")
+          |> limit(n: 1)
+        '''
+        
+        result = query_api.query(query=query, org=ORG)
+        
+        # Check if we got any results
+        for table in result:
+            for record in table.records:
+                return True
+                
+        # No recent temperature data found
+        logger.warning("No recent pressure data found")
+        return False
+        
+    except Exception as e:
+        logger.error(f"pressure readings check failed: {str(e)}")
+        return False
+#
+
 def check_humidity_readings():
     """Check if we're getting recent humidity readings"""
     try:
@@ -365,6 +404,81 @@ def get_temperature_data():
     except Exception as e:
         logger.error(f"Error in temperature endpoint: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
+#
+@app.route('/api/pressure', methods=['GET'])
+def get_pressure_data():
+    try:
+        # Get time range from query parameter
+        range_param = request.args.get('range', '5m')
+        start_time, end_time = parse_time_range(range_param)
+        
+        logger.debug(f"Fetching pressure data from {start_time} to {end_time}")
+        
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        
+        # Try different query styles to find temperature data
+        queries = [
+            # Try as field
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+              |> filter(fn: (r) => r._field == "pressure_status")
+              |> sort(columns: ["_time"])
+            ''',
+            # Try as measurement
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+              |> filter(fn: (r) => r._measurement == "pressure")
+              |> sort(columns: ["_time"])
+            ''',
+            # Try with partial matching
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+              |> filter(fn: (r) => r._field =~ /.*pres.*/ or r._measurement =~ /.*pres.*/)
+              |> sort(columns: ["_time"])
+            '''
+        ]
+        
+        data = []
+        for query in queries:
+            logger.debug(f"Trying query: {query}")
+            result = query_api.query(query=query, org=ORG)
+            
+            query_data = []
+            for table in result:
+                for record in table.records:
+                    time = record.get_time().strftime("%Y-%m-%d %H:%M:%S")
+                    value = record.get_value()
+                    if value is not None:
+                        query_data.append({"time": time, "value": value})
+            
+            logger.debug(f"Found {len(query_data)} data points with this query")
+            
+            if query_data:
+                data = query_data
+                break
+        
+        # If no data found, return sample data for testing
+        if len(data) == 0:
+            logger.warning("No pressure data found, returning sample data")
+            sample_data = generate_sample_temperature_data(start_time, end_time)
+            return jsonify(sample_data)
+        
+        return jsonify(data)
+    
+    except Exception as e:
+        logger.error(f"Error in pressure endpoint: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+#
 
 @app.route('/api/humidity', methods=['GET'])
 def get_humidity_data():

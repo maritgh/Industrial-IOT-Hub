@@ -46,10 +46,11 @@ void loop() {
   
   float temp = random(2000, 2100) / 100.0;
   float hum  = random(4000, 5100) / 100.0;
-  float status = 0;  // Added status field
+  float status = 1.11;  // Added status field
+  float pressure = 1000.12;
   
   delay(3000);
-  publishSensorData(temp, hum, status);
+  publishSensorData(temp, hum, status, pressure);
 }
 
 void connectToMQTT() {
@@ -71,9 +72,9 @@ void connectToMQTT() {
   }
 }
 
-void publishSensorData(float temp, float hum, float status) {
+void publishSensorData(float temp, float hum, float status, float pressure) {
   char payload[150];
-  snprintf(payload, sizeof(payload), "{\"temp\": %.2f, \"hum\": %.2f, \"status\": %.2f}", temp, hum, status);
+  snprintf(payload, sizeof(payload), "{\"temp\": %.2f, \"hum\": %.2f, \"status\": %.2f, \"pressure\": %.2f}", temp, hum, status, pressure);
   
   Serial.print("Publishing to sensor/data: ");
   Serial.println(payload);
