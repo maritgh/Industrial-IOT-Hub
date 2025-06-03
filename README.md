@@ -1,75 +1,107 @@
-# Industrial-IOT-Hub
-# Sensor Data Collector (MQTT to InfluxDB)
+# Industrial-IOT-Hub  
+---
 
-This project collects simulated sensor data via MQTT and stores it in an InfluxDB 2.x database using a Python backend.
+## Table of Contents
+- [Industrial-IOT-Hub](#industrial-iot-hub)
+  - [Table of Contents](#table-of-contents)
+  - [Project Overview](#project-overview)
+  - [Repository Structure](#repository-structure)
+  - [Purpose of the Repository](#purpose-of-the-repository)
+  - [Key Features](#key-features)
+  - [Contributors](#contributors)
 
 ---
 
-## 📡 Network Overview
-[Python Simulator] ---> MQTT ---> [Python Collector] ---> InfluxDB
+## Project Overview
+The project is a collaboration with **Stedin**, a major energy company in the Netherlands. Our main objective is to develop an IoT hub that contributes to a **more efficient energy transition**. The system monitors key environmental conditions such as **temperature and humidity** inside transformer stations, helping Stedin proactively **optimize network stability, safety, and efficiency**.
 
-*Note: Arduino connection is excluded for simulation purposes.*
+Currently, Stedin uses **multiple sensors per energy transformer hub**, all connected in a **decentralized and complex network** of inconsistent protocols and dashboards. Our goal is to **centralize** this into a **single, streamlined dashboard** that provides a **nationwide overview** of all hubs and sensors in the Netherlands, displaying data in a clear and accessible format.
+
+The Netherlands is facing issues with **overloaded power lines**. Errors in the system can exacerbate these problems by adding more load to the grid. By improving data collection and monitoring, **errors can be detected earlier**, enabling **faster maintenance** and reducing strain on the grid.
+
+We are building an **IoT hub**—a central Arduino-based system that collects data from multiple ESP32 devices equipped with sensors such as humidity and temperature sensors. The goal is to **streamline the data flow** from energy stations to **Stedin** using multiple protocols, enabling efficient data aggregation.
+
+Each ESP32 collects sensor data and sends it to the central Arduino hub. From there, the data is processed and transmitted to a server with a **database and dashboard**.
+
+This project focuses on researching how data collection from these hubs can be done **more efficiently**. Instead of delivering a complete product, our mission is to **explore potential improvements**. These insights can later be further developed or scaled.
+
+
+![Network Flow](images/example.png)
 
 ---
 
-## Setup Guide
+## Repository Structure
 
-Run you container
+The repository is organized into the following folders and files:
 
-After running the container, you can access the InfluxDB UI at `http://localhost:8086`.
+- **[images](images)**  
+  Contains images and diagrams used in the documentation.
 
-You will need to create an initial user, organization, and a bucket. For this tutorial, let's assume you create a bucket named `data`. These have already been setup
+- **README.md**  
+  This file, providing an overview of the project and instructions on where to find more information.
 
-### 1\. Configure Bucket and MQTT Consumer in InfluxDB
+**Usage Guides**
 
-To configure the MQTT consumer, follow these steps within the InfluxDB UI:
+- [General Usage Guide](markdown/Usage-guide.md).
+  General setup of the project
 
-1.  Navigate to the bucket you created (e.g., `data`).
-2.  Click on the `Add Data` button.
-3.  Select `Telegraf Configuration`.
-4.  Choose `MQTT Consumer`.
-5.  Configure the MQTT Consumer connection settings. The default MQTT broker address is usually `localhost:1883`.
-6.  Click `Continue Configuring`.
-7.  In the `View Configuration` step, you will be prompted to paste a configuration file. The location of a sample configuration file in this project is:
+- [Arduino Usage Guide](markdown/ArduinoUsage.md).
+  Documenation specifically for the Arduino
 
-    ```bash
-    backend/telegraf configuration/
-    ```
-8.  Save the Telegraf configuration.
-9.  After saving, copy the generated API token. You will need this token in the Python backend configuration.
+- [Dashboard Usage Guide](markdown/DashboardUsage.md).
+  Documenation specifically for the Dashboard and the Database
+  
+---
 
-### 3\. Setup Python Backend
+## Purpose of the Repository
 
-First, install the necessary Python packages:
+This GitHub repository serves as the central hub for:
+- **Source code**: Including dashboard development and Arduino/ESP32 scripts.
+- **Documentation**: Project plans, development tests, results, 
 
-```bash
-pip install influxdb-client paho-mqtt
-pip3 install flask-cors
+For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
 
-```
+---
 
-Next, you need to edit the `backend/collector.py` file to include your InfluxDB connection details. Open the file and update the following variables:
+## Key Features
 
-```python
-INFLUX_URL = "http://localhost:8086"
-TOKEN = "YOUR_API_TOKEN_HERE" # Replace with the API token you copied 
-ORG = "your-org"             # Replace with your InfluxDB organization name in this case "Stedin"
-BUCKET = "data"              # Ensure this matches the bucket you created "For now it is "Data"
-```
+- **Improved real-time monitoring** of transformer station environmental conditions  
+- **Enhanced predictive maintenance**, reducing manual checks and improving fault detection  
+- **Optimized performance** of the national energy infrastructure  
+- **Centralized dashboard** offering access to all sensors in the country via one interface  
 
-Once you have configured the backend, you can run the collector script to start listening for MQTT messages and writing data to InfluxDB:
+---
 
-```bash
-python backend/collector.py
-```
+## Contributors
 
-### 4\. Run the Data Simulator (Dummy Data Publisher)
 
-To generate dummy sensor data and publish it over MQTT, run the simulator script:
+* **Derk O.**
 
-```bash
-python simulation/simulator.py
-```
+  1. Developed MQTT integration for secure data transmission to the Mosquitto broker.
+  2. Created a Python-based collector to forward data into InfluxDB.
+  3. Designed and implemented the InfluxDB time-series database setup.
+  4. Built and styled a real-time dashboard using a Flask API, served through NGINX.
+  5. Dockerized all services to ensure consistent and portable deployment.
+  6. Created the project architecture and setup documentation, including the main README and usage guides.
 
-This script will simulate temperature and humidity readings and send them to the MQTT broker, which will then be processed by the Python collector and stored in InfluxDB.
-```
+
+(jullie moeten zelf iets voor jezelf invullen)
+- **Femke H.** – Database setup, research, and documentation  
+- **Marit S.** – Arduino design, testing, and documentation  
+- **Subaydah M.** – Arduino setup, testing, frontend integration, and documentation  
+- **Tibor van de K.** – Arduino design, documentation, and testing  
+
+For questions or contributions, please open an issue on GitHub.
+
+---
+
+
+
+Designed and implemented the complete data pipeline for an Industrial IoT system:
+
+* Collected environmental sensor data using an ESP32-based IoT hub.
+* Transmitted data securely via MQTT to a Mosquitto broker.
+* Used a Python collector to forward the data into InfluxDB.
+* Built a real-time dashboard powered by a Flask API and served via NGINX.
+* Dockerized all services for consistent deployment
+* Created structured documentation and README for ease of use and replication

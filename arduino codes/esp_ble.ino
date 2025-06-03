@@ -5,19 +5,19 @@
 #define SDA_PIN 21
 #define SCL_PIN 22
 
-Adafruit_BMP280 bmp; // BMP280 sensor
+Adafruit_BMP280 bmp;
 
-// BLE Service en Characteristic
-BLEService pressureService("b4f142ab-edae-4a52-b90b-4d9e7edb1d10");  
-BLEStringCharacteristic pressureCharacteristic("b4f142ab-edae-4a52-b90b-4d9e7edb1d10", BLERead | BLENotify, 20);
+// BLE Service and Characteristic UUID
+BLEService pressureService("b4f142ab-edae-4a52-b90b-4d9e7edb1d10");
+BLEStringCharacteristic pressureCharacteristic("b4f142ab-edae-4a52-b90b-4d9e7edb1d10", BLERead | BLENotify, 50);
 
 void ConnectHandler(BLEDevice central) {
-  Serial.print("Connected to BLE ");
+  Serial.print("[BLE] Connected to central: ");
   Serial.println(central.address());
 }
 
 void DisconnectHandler(BLEDevice central) {
-  Serial.print("Disconnected: ");
+  Serial.print("[BLE] Disconnected from central: ");
   Serial.println(central.address());
 }
 
@@ -28,16 +28,15 @@ void setup() {
   Wire.begin(SDA_PIN, SCL_PIN);
 
   if (!bmp.begin(0x76)) {
-    Serial.println("BMP280 not found!");
+    Serial.println("[SENSOR] BMP280 not found!");
     while (1);
   }
 
   if (!BLE.begin()) {
-    Serial.println("Starting BLE failed!");
+    Serial.println("[BLE] Starting BLE failed!");
     while (1);
   }
 
-  // BLE Setup
   BLE.setEventHandler(BLEConnected, ConnectHandler);
   BLE.setEventHandler(BLEDisconnected, DisconnectHandler);
   BLE.setLocalName("PRESSURE");
@@ -45,11 +44,11 @@ void setup() {
 
   pressureService.addCharacteristic(pressureCharacteristic);
   BLE.addService(pressureService);
-  pressureCharacteristic.writeValue("0");
+  pressureCharacteristic.writeValue("{\"pressure\":0}");
 
   BLE.advertise();
 
-  Serial.println("BLE Pressure Sensor Peripheral is ready.");
+  Serial.println("[BLE] Pressure Sensor Peripheral ready.");
 }
 
 void loop() {
@@ -58,16 +57,16 @@ void loop() {
 
   BLE.poll();
 
-  if (BLE.connected() && currentTime - lastSendTime >= 10000) {
+  if (BLE.connected() && (currentTime - lastSendTime >= 10000)) {
     lastSendTime = currentTime;
 
     float pressure = bmp.readPressure() / 100.0F; // hPa
-    String pressureStr = String(pressure, 2);
+    String payload = "{\"pressure\":" + String(pressure, 2) + "}";
 
-    Serial.print("Pressure: ");
-    Serial.println(pressureStr);
+    Serial.print("[SENSOR] Pressure: ");
+    Serial.println(payload);
 
-    pressureCharacteristic.writeValue(pressureStr);
-    Serial.println("Pressure sent via BLE.");
+    pressureCharacteristic.writeValue(payload);
+    Serial.println("[BLE] Pressure sent via BLE.");
   }
 }

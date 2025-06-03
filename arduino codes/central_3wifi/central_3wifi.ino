@@ -45,7 +45,7 @@ void setup() {
     while (1);
   }
 
-  Serial.println("🔍 BLE Central - Scanning...");
+  Serial.println(" BLE Central - Scanning...");
   BLE.scan();
 }
 
@@ -161,7 +161,7 @@ void handleHttpClient() {
 
 // BLE verbinding opzetten
 bool connectPeripheral(BLEDevice& peripheral, const char* charUUID, BLEDevice& outDevice, BLECharacteristic& outChar) {
-  Serial.print("🔗 Connecting to ");
+  Serial.print(" Connecting to ");
   Serial.println(peripheral.localName());
 
   if (!peripheral.connect()) {

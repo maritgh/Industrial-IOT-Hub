@@ -9,21 +9,28 @@
     <style>
         .chart-container {
             width: 100%;
-            height: 400px;
+            height: 400px; /* Default height for charts */
             margin-bottom: 30px;
         }
         .card {
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: .5rem; /* Rounded corners for cards */
         }
         .chart-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 1rem 1.25rem; /* Bootstrap card header padding */
+            background-color: rgba(0,0,0,.03); /* Light background for header */
+            border-bottom: 1px solid rgba(0,0,0,.125); /* Border for header */
+        }
+        .chart-header h3 {
+            margin-bottom: 0; /* Remove default margin from h3 */
         }
         h1 {
             margin-bottom: 30px;
+            font-weight: 300; /* Lighter font for main title */
         }
         .status-indicator {
             display: inline-block;
@@ -31,12 +38,13 @@
             height: 12px;
             border-radius: 50%;
             margin-right: 5px;
+            vertical-align: middle; /* Align indicator with text */
         }
         .status-connected {
-            background-color: #28a745;
+            background-color: #28a745; /* Green for connected */
         }
         .status-disconnected {
-            background-color: #dc3545;
+            background-color: #dc3545; /* Red for disconnected */
         }
         .api-status {
             margin-bottom: 15px;
@@ -46,7 +54,7 @@
             text-align: center;
             margin-bottom: 20px;
             font-size: 16px;
-            color: #666;
+            color: #6c757d; /* Bootstrap muted color */
         }
         .time-range-controls {
             text-align: center;
@@ -54,6 +62,7 @@
         }
         .time-range-controls .btn {
             margin: 0 5px 5px 0;
+            border-radius: .25rem; /* Rounded corners for buttons */
         }
         .btn-time-range.active {
             background-color: #007bff;
@@ -68,15 +77,94 @@
             display: inline-block;
             margin-left: 10px;
             font-size: 12px;
-            color: #666;
+            color: #6c757d; /* Bootstrap muted color */
         }
         .last-updated {
             text-align: center;
             font-size: 12px;
-            color: #999;
+            color: #adb5bd; /* Lighter muted color */
             margin-bottom: 15px;
         }
+        
+        /* Status Visualizer Styles */
+        .status-visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 0; /* Add some padding */
+        }
+        .status-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px; /* Larger icon */
+            margin: 0 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .status-circle.status-ok {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            animation: pulse-green 2s infinite;
+        }
+        .status-circle.status-error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            animation: pulse-red 2s infinite;
+        }
+        .status-circle.status-unknown {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+        }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
+        .status-label {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .status-details {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d; /* Bootstrap muted color */
+        }
+
+        /* Ensure charts are responsive within their containers */
+        #temperatureChart, #humidityChart, #pressureChart {
+            max-width: 100%;
+            height: auto; /* Adjust height automatically */
+        }
+
+        /* Custom styles for better visual appeal */
+        body {
+            font-family: 'Inter', sans-serif; /* Modern font */
+            background-color: #f8f9fa; /* Light gray background */
+        }
+        .container {
+            max-width: 1200px; /* Limit container width for larger screens */
+        }
+         .card-body {
+            padding: 1.25rem; /* Standard Bootstrap padding */
+        }
+
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
@@ -85,6 +173,25 @@
         <div class="api-status text-center">
             <span class="status-indicator status-disconnected" id="apiStatus"></span>
             <span id="apiStatusText">Checking API connection...</span>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center mb-0">System Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="status-visualizer">
+                    <div class="status-circle status-unknown" id="statusCircle">
+                        <span id="statusIcon">?</span>
+                    </div>
+                </div>
+                <div class="status-label" id="statusLabel">
+                    Checking Status...
+                </div>
+                <div class="status-details" id="statusDetails">
+                    Connecting to system...
+                </div>
+            </div>
         </div>
         
         <div class="time-range-controls">
@@ -113,8 +220,7 @@
         </div>
         
         <div class="row">
-            <div class="col-md-6">
-                <div class="card">
+            <div class="col-lg-4 col-md-6"> <div class="card">
                     <div class="chart-header">
                         <h3>Temperature</h3>
                     </div>
@@ -126,8 +232,7 @@
                 </div>
             </div>
             
-            <div class="col-md-6">
-                <div class="card">
+            <div class="col-lg-4 col-md-6"> <div class="card">
                     <div class="chart-header">
                         <h3>Humidity</h3>
                     </div>
@@ -138,22 +243,36 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-lg-4 col-md-12"> <div class="card">
+                    <div class="chart-header">
+                        <h3>Pressure</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // API configuration - CHANGE THIS TO MATCH YOUR BACKEND URL
-        const API_BASE_URL = "http://localhost:5000/api";
+        const API_BASE_URL = "http://localhost:5000/api"; // Example: "http://your-backend-domain.com/api"
         
         // Global chart objects
         let temperatureChart;
         let humidityChart;
+        let pressureChart; // New chart object for pressure
         let currentTimeRange = '5m';
         let autoRefreshInterval;
 
         // Chart colors
-        const tempColor = 'rgba(255, 99, 132, 0.7)';
-        const humidityColor = 'rgba(54, 162, 235, 0.7)';
+        const tempColor = 'rgba(255, 99, 132, 0.8)'; // Slightly more opaque
+        const humidityColor = 'rgba(54, 162, 235, 0.8)'; // Slightly more opaque
+        const pressureColor = 'rgba(75, 192, 192, 0.8)'; // Teal color for pressure
 
         // Check API connection
         async function checkApiConnection() {
@@ -165,93 +284,164 @@
                     document.getElementById('apiStatusText').textContent = 'Connected to API';
                     return true;
                 } else {
-                    throw new Error('API responded with an error');
+                    throw new Error(`API responded with status: ${response.status}`);
                 }
             } catch (error) {
                 document.getElementById('apiStatus').classList.remove('status-connected');
                 document.getElementById('apiStatus').classList.add('status-disconnected');
-                document.getElementById('apiStatusText').textContent = 'API Connection Failed - Make sure your backend is running';
+                document.getElementById('apiStatusText').textContent = 'API Connection Failed - Ensure backend is running and API_BASE_URL is correct.';
                 console.error('API connection error:', error);
                 return false;
             }
+        }
+
+        // Fetch system status
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/system-status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching system status:', error);
+                return {
+                    status: 'error',
+                    message: 'Connection failed',
+                    details: 'Unable to connect to status endpoint'
+                };
+            }
+        }
+
+        // Update status visualizer
+        async function updateStatusVisualizer() {
+            const statusData = await fetchSystemStatus(); // Renamed variable for clarity
+            const circle = document.getElementById('statusCircle');
+            const icon = document.getElementById('statusIcon');
+            const label = document.getElementById('statusLabel');
+            const details = document.getElementById('statusDetails');
+
+            circle.classList.remove('status-ok', 'status-error', 'status-unknown');
+
+            switch(String(statusData.status).toLowerCase()) { // Ensure lowercase comparison
+                case 'ok':
+                case 'good':
+                case 'normal':
+                    circle.classList.add('status-ok');
+                    icon.textContent = '✓';
+                    label.textContent = 'System OK';
+                    label.style.color = '#28a745';
+                    break;
+                case 'error':
+                case 'critical':
+                case 'bad':
+                    circle.classList.add('status-error');
+                    icon.textContent = '✗';
+                    label.textContent = 'System Error';
+                    label.style.color = '#dc3545';
+                    break;
+                default:
+                    circle.classList.add('status-unknown');
+                    icon.textContent = '?';
+                    label.textContent = 'Status Unknown';
+                    label.style.color = '#6c757d';
+                    break;
+            }
+            details.textContent = statusData.message || statusData.details || 'No additional information';
         }
 
         // Update time range display
         function updateTimeRangeDisplay() {
             const now = new Date();
             let startTime;
+            let rangeText = "Last 5 Minutes"; // Default text
             
             switch(currentTimeRange) {
                 case '5m':
                     startTime = new Date(now.getTime() - 5 * 60 * 1000);
+                    rangeText = "Last 5 Minutes";
                     break;
                 case '1h':
                     startTime = new Date(now.getTime() - 60 * 60 * 1000);
+                    rangeText = "Last Hour";
                     break;
                 case '3h':
                     startTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+                    rangeText = "Last 3 Hours";
                     break;
                 case '24h':
                     startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                    rangeText = "Last 24 Hours";
                     break;
+                default: // Should not happen
+                     startTime = new Date(now.getTime() - 5 * 60 * 1000);
             }
             
             document.getElementById('timeRangeDisplay').textContent = 
-                `Displaying data from: ${startTime.toLocaleString()} to ${now.toLocaleString()}`;
+                `Displaying data for: ${rangeText} (from ${startTime.toLocaleTimeString()} to ${now.toLocaleTimeString()})`;
         }
+
+        // Generic data fetching function
+        async function fetchData(endpoint, range) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${endpoint}?range=${range}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} for ${endpoint}`);
+                }
+                const data = await response.json();
+                // Ensure data is an array, even if API returns single object or null
+                return Array.isArray(data) ? data : (data ? [data] : []);
+            } catch (error) {
+                console.error(`Error fetching ${endpoint} data:`, error);
+                // Display error on the specific chart
+                const chartCanvasId = endpoint.split('-')[0] + 'Chart'; // e.g. temperatureChart
+                const chartContainer = document.getElementById(chartCanvasId)?.parentElement;
+                if (chartContainer) {
+                     chartContainer.innerHTML = `<p class="text-center text-danger p-3">Error loading ${endpoint} data. Please check console.</p>`;
+                }
+                return []; // Return empty array to prevent chart errors
+            }
+        }
+
 
         // Fetch temperature data
         async function fetchTemperatureData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/temperature?range=${currentTimeRange}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error fetching temperature data:', error);
-                return [];
-            }
+            return fetchData('temperature', currentTimeRange);
         }
 
         // Fetch humidity data
         async function fetchHumidityData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/humidity?range=${currentTimeRange}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error fetching humidity data:', error);
-                return [];
-            }
+            return fetchData('humidity', currentTimeRange);
         }
 
-        // Initialize temperature chart
-        async function initTemperatureChart() {
-            const data = await fetchTemperatureData();
-            const ctx = document.getElementById('temperatureChart').getContext('2d');
+        // Fetch pressure data - NEW
+        async function fetchPressureData() {
+            return fetchData('pressure', currentTimeRange);
+        }
+        
+        // Generic chart initialization function
+        function initChart(chartInstance, canvasId, data, label, color, yAxisLabel, yAxisMin, yAxisMax) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
             
-            if (temperatureChart) {
-                temperatureChart.destroy();
+            if (chartInstance) {
+                chartInstance.destroy();
             }
             
-            temperatureChart = new Chart(ctx, {
+            return new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.map(item => new Date(item.time).toLocaleTimeString()),
+                    labels: data.map(item => new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })),
                     datasets: [{
-                        label: 'Temperature (°C)',
+                        label: label,
                         data: data.map(item => item.value),
-                        borderColor: tempColor,
-                        backgroundColor: tempColor,
-                        tension: 0.1,
-                        pointRadius: 2,
+                        borderColor: color,
+                        backgroundColor: color.replace('0.8', '0.2'), // Lighter fill color
+                        tension: 0.2, // Smoother lines
+                        pointRadius: data.length > 50 ? 1 : 3, // Smaller points for more data
+                        pointHoverRadius: data.length > 50 ? 3 : 5,
                         borderWidth: 2,
-                        fill: false
+                        fill: true // Enable fill
                     }]
                 },
                 options: {
@@ -261,99 +451,127 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Temperature (°C)'
+                                text: yAxisLabel
+                            },
+                            min: yAxisMin,
+                            max: yAxisMax,
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)' // Lighter grid lines
                             }
                         },
                         x: {
                             title: {
                                 display: true,
                                 text: 'Time'
+                            },
+                            ticks: {
+                                maxRotation: 0, // Prevent label rotation
+                                autoSkip: true,
+                                maxTicksLimit: 10 // Limit number of x-axis ticks for readability
+                            },
+                             grid: {
+                                display: false // Hide vertical grid lines for cleaner look
                             }
                         }
                     },
                     plugins: {
                         legend: {
-                            display: true
+                            display: true,
+                            position: 'top', // Legend at the top
+                             labels: {
+                                usePointStyle: true, // Use point style for legend items
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    // Display full date and time in tooltip title
+                                    if (tooltipItems.length > 0) {
+                                        const dataIndex = tooltipItems[0].dataIndex;
+                                        const originalTimestamp = data[dataIndex]?.time;
+                                        if (originalTimestamp) {
+                                            return new Date(originalTimestamp).toLocaleString();
+                                        }
+                                    }
+                                    return '';
+                                }
+                            }
                         }
+                    },
+                    interaction: { // Performance improvement for hover
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
                     }
                 }
             });
+        }
+
+
+        // Initialize temperature chart
+        async function initTemperatureChart() {
+            const data = await fetchTemperatureData();
+            if (document.getElementById('temperatureChart')) { // Check if element exists
+                 temperatureChart = initChart(temperatureChart, 'temperatureChart', data, 'Temperature (°C)', tempColor, 'Temperature (°C)');
+            }
         }
 
         // Initialize humidity chart
         async function initHumidityChart() {
             const data = await fetchHumidityData();
-            const ctx = document.getElementById('humidityChart').getContext('2d');
-            
-            if (humidityChart) {
-                humidityChart.destroy();
+             if (document.getElementById('humidityChart')) { // Check if element exists
+                humidityChart = initChart(humidityChart, 'humidityChart', data, 'Humidity (%)', humidityColor, 'Humidity (%)', 0, 100);
             }
-            
-            humidityChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(item => new Date(item.time).toLocaleTimeString()),
-                    datasets: [{
-                        label: 'Humidity (%)',
-                        data: data.map(item => item.value),
-                        borderColor: humidityColor,
-                        backgroundColor: humidityColor,
-                        tension: 0.1,
-                        pointRadius: 2,
-                        borderWidth: 2,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Humidity (%)'
-                            },
-                            min: 0,
-                            max: 100
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Time'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
-                }
-            });
         }
 
-        // Update both charts
-        async function updateCharts() {
-            updateTimeRangeDisplay();
-            await initTemperatureChart();
-            await initHumidityChart();
+        // Initialize pressure chart - NEW
+        async function initPressureChart() {
+            const data = await fetchPressureData();
+            if (document.getElementById('pressureChart')) { // Check if element exists
+                // Assuming typical pressure range, e.g., 950-1050 hPa. Adjust if needed.
+                pressureChart = initChart(pressureChart, 'pressureChart', data, 'Pressure (hPa)', pressureColor, 'Pressure (hPa)');
+            }
+        }
+
+
+        // Update all components
+        async function updateAll(isInitialLoad = false) {
+            if (!isInitialLoad) showRefreshIndicator(); // Show indicator for non-initial updates
+
+            updateTimeRangeDisplay(); // Update time range text first
+
+            const updatePromises = [
+                initTemperatureChart(),
+                initHumidityChart(),
+                initPressureChart(), // Add pressure chart update
+                updateStatusVisualizer()
+            ];
             
-            // Update last updated time
+            await Promise.all(updatePromises);
+            
             document.getElementById('lastUpdated').textContent = 
-                `Last updated: ${new Date().toLocaleTimeString()}`;
+                `Last updated: ${new Date().toLocaleString()}`; // Use toLocaleString for full date/time
+            
+            if (!isInitialLoad) hideRefreshIndicator(); // Hide indicator after updates
         }
 
         // Show refresh indicator
         function showRefreshIndicator() {
             const indicator = document.getElementById('refreshIndicator');
-            indicator.textContent = '🔄 Refreshing...';
-            indicator.style.color = '#007bff';
+            if (indicator) {
+                indicator.innerHTML = '&#x21BB; Refreshing...'; // Unicode refresh symbol
+                indicator.style.color = '#007bff';
+            }
         }
 
         // Hide refresh indicator
         function hideRefreshIndicator() {
             const indicator = document.getElementById('refreshIndicator');
-            indicator.textContent = '';
+            if (indicator) {
+                indicator.textContent = '';
+            }
         }
 
         // Setup auto-refresh
@@ -364,51 +582,48 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            if (checkbox.checked) {
+            if (checkbox && checkbox.checked) {
                 autoRefreshInterval = setInterval(async () => {
-                    showRefreshIndicator();
-                    await updateCharts();
-                    hideRefreshIndicator();
+                    // No need to call showRefreshIndicator here if updateAll handles it
+                    await updateAll(); 
                 }, 30000); // Refresh every 30 seconds
             }
         }
 
         // Initialize everything when the page loads
         document.addEventListener('DOMContentLoaded', async function() {
-            // First check API connection
             const isConnected = await checkApiConnection();
             
             if (isConnected) {
-                // Initial load
-                await updateCharts();
-                
-                // Setup auto-refresh
+                await updateAll(true); // Pass true for initial load
                 setupAutoRefresh();
                 
-                // Handle auto-refresh checkbox changes
-                document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
+                document.getElementById('autoRefresh')?.addEventListener('change', setupAutoRefresh);
                 
-                // Handle time range button clicks
                 document.querySelectorAll('.btn-time-range').forEach(button => {
                     button.addEventListener('click', async function() {
-                        // Update active button
                         document.querySelectorAll('.btn-time-range').forEach(btn => btn.classList.remove('active'));
                         this.classList.add('active');
-                        
-                        // Update current time range
                         currentTimeRange = this.getAttribute('data-range');
-                        
-                        // Update charts
-                        showRefreshIndicator();
-                        await updateCharts();
-                        hideRefreshIndicator();
+                        await updateAll(); // Refresh all data for new time range
                     });
                 });
-                
             } else {
-                // Show error message if API is not connected
-                document.getElementById('temperatureChart').innerHTML = '<p class="text-center mt-5">Cannot connect to API</p>';
-                document.getElementById('humidityChart').innerHTML = '<p class="text-center mt-5">Cannot connect to API</p>';
+                // Display connection error messages on all chart areas
+                const errorMsg = '<p class="text-center text-danger p-3">Cannot connect to API. Please ensure the backend is running and the API_BASE_URL is correctly configured.</p>';
+                const chartContainers = ['temperatureChart', 'humidityChart', 'pressureChart'];
+                chartContainers.forEach(id => {
+                    const el = document.getElementById(id)?.parentElement; // Get the chart-container div
+                    if (el) el.innerHTML = errorMsg;
+                });
+                 // Also update status visualizer to reflect connection error
+                document.getElementById('statusLabel').textContent = 'Connection Error';
+                document.getElementById('statusLabel').style.color = '#dc3545';
+                document.getElementById('statusDetails').textContent = 'Failed to connect to the API.';
+                const circle = document.getElementById('statusCircle');
+                circle.classList.remove('status-ok', 'status-unknown');
+                circle.classList.add('status-error');
+                document.getElementById('statusIcon').textContent = '✗';
             }
         });
     </script>
