@@ -39,44 +39,105 @@ def parse_time_range(range_str):
     
     return start_time, now
 
+def get_latest_status_code():
+    """
+    Get the latest status code from InfluxDB
+    Returns the most recent status code value or None if not found
+    """
+    try:
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        
+        # Try different query styles to find status code data
+        queries = [
+            # Try as field
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: -1h)
+              |> filter(fn: (r) => r._field == "status_code" or r._field == "status")
+              |> sort(columns: ["_time"], desc: true)
+              |> limit(n: 1)
+            ''',
+            # Try as measurement
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: -1h)
+              |> filter(fn: (r) => r._measurement == "status_code" or r._measurement == "status")
+              |> sort(columns: ["_time"], desc: true)
+              |> limit(n: 1)
+            ''',
+            # Try with partial matching
+            f'''
+            from(bucket: "{BUCKET}")
+              |> range(start: -1h)
+              |> filter(fn: (r) => r._field =~ /.*status.*/ or r._measurement =~ /.*status.*/)
+              |> sort(columns: ["_time"], desc: true)
+              |> limit(n: 1)
+            '''
+        ]
+        
+        for query in queries:
+            logger.debug(f"Trying status query: {query}")
+            result = query_api.query(query=query, org=ORG)
+            
+            for table in result:
+                for record in table.records:
+                    value = record.get_value()
+                    timestamp = record.get_time()
+                    logger.debug(f"Found status value: {value} at {timestamp}")
+                    return float(value) if value is not None else None
+        
+        logger.warning("No status code found in InfluxDB")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error fetching status code: {str(e)}")
+        return None
+
 def check_system_status():
     """
-    Check system status based on various criteria.
-    This is where you'll implement your custom logic.
+    Check system status based on status code from InfluxDB.
     Returns: dict with status, message, and optional details
     """
     try:
-        # Example status checks - replace with your actual logic
-        status_checks = {
-            'influxdb_connection': check_influxdb_connection(),
-            'temperature_readings': check_temperature_readings(),
-            'humidity_readings': check_humidity_readings(),
-            'data_freshness': check_data_freshness()
-        }
+        # Get the latest status code from InfluxDB
+        status_code = get_latest_status_code()
         
-        # Determine overall status
-        failed_checks = [check for check, result in status_checks.items() if not result]
-        
-        if len(failed_checks) == 0:
-            return {
-                'status': 'ok',
-                'message': 'All systems operational',
-                'details': 'All status checks passed successfully',
-                'checks': status_checks
-            }
-        elif len(failed_checks) <= 2:
-            return {
-                'status': 'warning',
-                'message': f'Minor issues detected: {", ".join(failed_checks)}',
-                'details': f'{len(failed_checks)} out of {len(status_checks)} checks failed',
-                'checks': status_checks
-            }
-        else:
+        if status_code is None:
             return {
                 'status': 'error',
-                'message': 'Multiple system failures detected',
-                'details': f'Failed checks: {", ".join(failed_checks)}',
-                'checks': status_checks
+                'message': 'No status data available',
+                'details': 'Unable to retrieve status code from InfluxDB',
+                'status_code': None
+            }
+        
+        # Check if status code indicates system is OK (1.11) or not (0)
+        if abs(status_code - 1.11) < 0.01:  # Using small tolerance for float comparison
+            return {
+                'status': 'ok',
+                'message': 'System operational',
+                'details': f'Status code: {status_code} - All systems running normally',
+                'status_code': status_code
+            }
+        elif abs(status_code - 0) < 0.01:  # Status code is 0
+            return {
+                'status': 'error',
+                'message': 'System error detected',
+                'details': f'Status code: {status_code} - System reporting error state',
+                'status_code': status_code
+            }
+        else:
+            # Unknown status code
+            return {
+                'status': 'error',
+                'message': 'Unknown status code',
+                'details': f'Unexpected status code: {status_code}',
+                'status_code': status_code
             }
             
     except Exception as e:
@@ -84,7 +145,8 @@ def check_system_status():
         return {
             'status': 'error',
             'message': 'Status check failed',
-            'details': str(e)
+            'details': str(e),
+            'status_code': None
         }
 
 def check_influxdb_connection():
@@ -218,7 +280,7 @@ def index():
 
 @app.route('/api/system-status', methods=['GET'])
 def get_system_status():
-    """Get overall system status"""
+    """Get overall system status based on status code from InfluxDB"""
     try:
         status_data = check_system_status()
         return jsonify(status_data)
@@ -227,7 +289,8 @@ def get_system_status():
         return jsonify({
             "status": "error",
             "message": "Failed to check system status",
-            "details": str(e)
+            "details": str(e),
+            "status_code": None
         }), 500
 
 @app.route('/api/temperature', methods=['GET'])

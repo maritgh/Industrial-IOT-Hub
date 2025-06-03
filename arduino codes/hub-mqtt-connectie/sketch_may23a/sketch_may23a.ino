@@ -46,7 +46,7 @@ void loop() {
   
   float temp = random(2000, 2100) / 100.0;
   float hum  = random(4000, 5100) / 100.0;
-  float status = 1.11;  // Added status field
+  float status = 0;  // Added status field
   
   delay(3000);
   publishSensorData(temp, hum, status);
