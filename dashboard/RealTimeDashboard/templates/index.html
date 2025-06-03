@@ -76,6 +76,64 @@
             color: #999;
             margin-bottom: 15px;
         }
+        
+        /* Status Visualizer Styles */
+        .status-visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .status-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .status-circle.status-ok {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            animation: pulse-green 2s infinite;
+        }
+        .status-circle.status-error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            animation: pulse-red 2s infinite;
+        }
+        .status-circle.status-unknown {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+        }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
+        .status-label {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .status-details {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +143,26 @@
         <div class="api-status text-center">
             <span class="status-indicator status-disconnected" id="apiStatus"></span>
             <span id="apiStatusText">Checking API connection...</span>
+        </div>
+        
+        <!-- Status Visualizer -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center mb-0">System Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="status-visualizer">
+                    <div class="status-circle status-unknown" id="statusCircle">
+                        <span id="statusIcon">?</span>
+                    </div>
+                </div>
+                <div class="status-label" id="statusLabel">
+                    Checking Status...
+                </div>
+                <div class="status-details" id="statusDetails">
+                    Connecting to system...
+                </div>
+            </div>
         </div>
         
         <div class="time-range-controls">
@@ -174,6 +252,64 @@
                 console.error('API connection error:', error);
                 return false;
             }
+        }
+
+        // Fetch system status
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/system-status`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching system status:', error);
+                return {
+                    status: 'error',
+                    message: 'Connection failed',
+                    details: 'Unable to connect to status endpoint'
+                };
+            }
+        }
+
+        // Update status visualizer
+        async function updateStatusVisualizer() {
+            const status = await fetchSystemStatus();
+            const circle = document.getElementById('statusCircle');
+            const icon = document.getElementById('statusIcon');
+            const label = document.getElementById('statusLabel');
+            const details = document.getElementById('statusDetails');
+
+            // Remove existing status classes
+            circle.classList.remove('status-ok', 'status-error', 'status-unknown');
+
+            switch(status.status) {
+                case 'ok':
+                case 'good':
+                case 'normal':
+                    circle.classList.add('status-ok');
+                    icon.textContent = '✓';
+                    label.textContent = 'System OK';
+                    label.style.color = '#28a745';
+                    break;
+                case 'error':
+                case 'critical':
+                case 'bad':
+                    circle.classList.add('status-error');
+                    icon.textContent = '✗';
+                    label.textContent = 'System Error';
+                    label.style.color = '#dc3545';
+                    break;
+                default:
+                    circle.classList.add('status-unknown');
+                    icon.textContent = '?';
+                    label.textContent = 'Status Unknown';
+                    label.style.color = '#6c757d';
+                    break;
+            }
+
+            details.textContent = status.message || status.details || 'No additional information';
         }
 
         // Update time range display
@@ -332,11 +468,14 @@
             });
         }
 
-        // Update both charts
-        async function updateCharts() {
+        // Update all components
+        async function updateAll() {
             updateTimeRangeDisplay();
-            await initTemperatureChart();
-            await initHumidityChart();
+            await Promise.all([
+                initTemperatureChart(),
+                initHumidityChart(),
+                updateStatusVisualizer()
+            ]);
             
             // Update last updated time
             document.getElementById('lastUpdated').textContent = 
@@ -367,7 +506,7 @@
             if (checkbox.checked) {
                 autoRefreshInterval = setInterval(async () => {
                     showRefreshIndicator();
-                    await updateCharts();
+                    await updateAll();
                     hideRefreshIndicator();
                 }, 30000); // Refresh every 30 seconds
             }
@@ -380,7 +519,7 @@
             
             if (isConnected) {
                 // Initial load
-                await updateCharts();
+                await updateAll();
                 
                 // Setup auto-refresh
                 setupAutoRefresh();
@@ -398,9 +537,9 @@
                         // Update current time range
                         currentTimeRange = this.getAttribute('data-range');
                         
-                        // Update charts
+                        // Update charts (status doesn't depend on time range)
                         showRefreshIndicator();
-                        await updateCharts();
+                        await updateAll();
                         hideRefreshIndicator();
                     });
                 });

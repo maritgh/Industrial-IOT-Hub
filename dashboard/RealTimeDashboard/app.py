@@ -5,6 +5,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from datetime import datetime, timedelta, timezone
 import os
 import logging
+import random
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -38,9 +39,196 @@ def parse_time_range(range_str):
     
     return start_time, now
 
+def check_system_status():
+    """
+    Check system status based on various criteria.
+    This is where you'll implement your custom logic.
+    Returns: dict with status, message, and optional details
+    """
+    try:
+        # Example status checks - replace with your actual logic
+        status_checks = {
+            'influxdb_connection': check_influxdb_connection(),
+            'temperature_readings': check_temperature_readings(),
+            'humidity_readings': check_humidity_readings(),
+            'data_freshness': check_data_freshness()
+        }
+        
+        # Determine overall status
+        failed_checks = [check for check, result in status_checks.items() if not result]
+        
+        if len(failed_checks) == 0:
+            return {
+                'status': 'ok',
+                'message': 'All systems operational',
+                'details': 'All status checks passed successfully',
+                'checks': status_checks
+            }
+        elif len(failed_checks) <= 2:
+            return {
+                'status': 'warning',
+                'message': f'Minor issues detected: {", ".join(failed_checks)}',
+                'details': f'{len(failed_checks)} out of {len(status_checks)} checks failed',
+                'checks': status_checks
+            }
+        else:
+            return {
+                'status': 'error',
+                'message': 'Multiple system failures detected',
+                'details': f'Failed checks: {", ".join(failed_checks)}',
+                'checks': status_checks
+            }
+            
+    except Exception as e:
+        logger.error(f"Error checking system status: {str(e)}")
+        return {
+            'status': 'error',
+            'message': 'Status check failed',
+            'details': str(e)
+        }
+
+def check_influxdb_connection():
+    """Check if InfluxDB is accessible"""
+    try:
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        # Try a simple query to test connection
+        query_api = client.query_api()
+        query = f'buckets() |> filter(fn: (r) => r.name == "{BUCKET}") |> limit(n:1)'
+        result = query_api.query(query=query, org=ORG)
+        
+        # If we get here without exception, connection is good
+        return True
+    except Exception as e:
+        logger.error(f"InfluxDB connection check failed: {str(e)}")
+        return False
+
+def check_temperature_readings():
+    """Check if we're getting recent temperature readings"""
+    try:
+        # Check for temperature data in the last 10 minutes
+        now = datetime.now(timezone.utc)
+        start_time = now - timedelta(minutes=10)
+        
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        query = f'''
+        from(bucket: "{BUCKET}")
+          |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+          |> filter(fn: (r) => r._field == "temperature" or r._measurement == "temperature")
+          |> limit(n: 1)
+        '''
+        
+        result = query_api.query(query=query, org=ORG)
+        
+        # Check if we got any results
+        for table in result:
+            for record in table.records:
+                return True
+                
+        # No recent temperature data found
+        logger.warning("No recent temperature data found")
+        return False
+        
+    except Exception as e:
+        logger.error(f"Temperature readings check failed: {str(e)}")
+        return False
+
+def check_humidity_readings():
+    """Check if we're getting recent humidity readings"""
+    try:
+        # Check for humidity data in the last 10 minutes
+        now = datetime.now(timezone.utc)
+        start_time = now - timedelta(minutes=10)
+        
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        query = f'''
+        from(bucket: "{BUCKET}")
+          |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+          |> filter(fn: (r) => r._field == "humidity" or r._measurement == "humidity")
+          |> limit(n: 1)
+        '''
+        
+        result = query_api.query(query=query, org=ORG)
+        
+        # Check if we got any results
+        for table in result:
+            for record in table.records:
+                return True
+                
+        # No recent humidity data found
+        logger.warning("No recent humidity data found")
+        return False
+        
+    except Exception as e:
+        logger.error(f"Humidity readings check failed: {str(e)}")
+        return False
+
+def check_data_freshness():
+    """Check if data is recent enough (within last 5 minutes)"""
+    try:
+        now = datetime.now(timezone.utc)
+        start_time = now - timedelta(minutes=5)
+        
+        client = influxdb_client.InfluxDBClient(
+            url=INFLUX_URL,
+            token=TOKEN,
+            org=ORG
+        )
+        
+        query_api = client.query_api()
+        query = f'''
+        from(bucket: "{BUCKET}")
+          |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
+          |> limit(n: 1)
+        '''
+        
+        result = query_api.query(query=query, org=ORG)
+        
+        # Check if we got any recent data
+        for table in result:
+            for record in table.records:
+                return True
+                
+        logger.warning("No fresh data found in the last 5 minutes")
+        return False
+        
+    except Exception as e:
+        logger.error(f"Data freshness check failed: {str(e)}")
+        return False
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/system-status', methods=['GET'])
+def get_system_status():
+    """Get overall system status"""
+    try:
+        status_data = check_system_status()
+        return jsonify(status_data)
+    except Exception as e:
+        logger.error(f"Error in system-status endpoint: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": "Failed to check system status",
+            "details": str(e)
+        }), 500
 
 @app.route('/api/temperature', methods=['GET'])
 def get_temperature_data():
