@@ -1,3 +1,6 @@
+# This python script functions as an API wich retrieves data from the database when the FrontEnd Website request it, the webite is located here ../templates/index.html
+
+
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import influxdb_client
@@ -52,10 +55,7 @@ def get_latest_status_code():
         )
         
         query_api = client.query_api()
-        
-        # Try different query styles to find status code data
         queries = [
-            # Try as field
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: -1h)
@@ -63,7 +63,6 @@ def get_latest_status_code():
               |> sort(columns: ["_time"], desc: true)
               |> limit(n: 1)
             ''',
-            # Try as measurement
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: -1h)
@@ -71,7 +70,6 @@ def get_latest_status_code():
               |> sort(columns: ["_time"], desc: true)
               |> limit(n: 1)
             ''',
-            # Try with partial matching
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: -1h)
@@ -117,14 +115,14 @@ def check_system_status():
             }
         
         # Check if status code indicates system is OK (1.11) or not (0)
-        if abs(status_code - 1.11) < 0.01:  # Using small tolerance for float comparison
+        if abs(status_code - 1.11) < 0.01:  
             return {
                 'status': 'ok',
                 'message': 'System operational',
                 'details': f'Status code: {status_code} - All systems running normally',
                 'status_code': status_code
             }
-        elif abs(status_code - 0) < 0.01:  # Status code is 0
+        elif abs(status_code - 0) < 0.01:
             return {
                 'status': 'error',
                 'message': 'System error detected',
@@ -132,7 +130,6 @@ def check_system_status():
                 'status_code': status_code
             }
         else:
-            # Unknown status code
             return {
                 'status': 'error',
                 'message': 'Unknown status code',
@@ -158,12 +155,11 @@ def check_influxdb_connection():
             org=ORG
         )
         
-        # Try a simple query to test connection
         query_api = client.query_api()
         query = f'buckets() |> filter(fn: (r) => r.name == "{BUCKET}") |> limit(n:1)'
         result = query_api.query(query=query, org=ORG)
         
-        # If we get here without exception, connection is good
+
         return True
     except Exception as e:
         logger.error(f"InfluxDB connection check failed: {str(e)}")
@@ -172,7 +168,7 @@ def check_influxdb_connection():
 def check_temperature_readings():
     """Check if we're getting recent temperature readings"""
     try:
-        # Check for temperature data in the last 10 minutes
+
         now = datetime.now(timezone.utc)
         start_time = now - timedelta(minutes=10)
         
@@ -191,13 +187,10 @@ def check_temperature_readings():
         '''
         
         result = query_api.query(query=query, org=ORG)
-        
-        # Check if we got any results
         for table in result:
             for record in table.records:
                 return True
                 
-        # No recent temperature data found
         logger.warning("No recent temperature data found")
         return False
         
@@ -210,7 +203,6 @@ def check_temperature_readings():
 def check_pressure_readings():
     """Check if we're getting recent pressure readings"""
     try:
-        # Check for temperature data in the last 10 minutes
         now = datetime.now(timezone.utc)
         start_time = now - timedelta(minutes=10)
         
@@ -229,13 +221,11 @@ def check_pressure_readings():
         '''
         
         result = query_api.query(query=query, org=ORG)
-        
-        # Check if we got any results
+
         for table in result:
             for record in table.records:
                 return True
-                
-        # No recent temperature data found
+
         logger.warning("No recent pressure data found")
         return False
         
@@ -247,7 +237,7 @@ def check_pressure_readings():
 def check_humidity_readings():
     """Check if we're getting recent humidity readings"""
     try:
-        # Check for humidity data in the last 10 minutes
+
         now = datetime.now(timezone.utc)
         start_time = now - timedelta(minutes=10)
         
@@ -266,13 +256,12 @@ def check_humidity_readings():
         '''
         
         result = query_api.query(query=query, org=ORG)
-        
-        # Check if we got any results
+
         for table in result:
             for record in table.records:
                 return True
                 
-        # No recent humidity data found
+
         logger.warning("No recent humidity data found")
         return False
         
@@ -301,7 +290,6 @@ def check_data_freshness():
         
         result = query_api.query(query=query, org=ORG)
         
-        # Check if we got any recent data
         for table in result:
             for record in table.records:
                 return True
@@ -335,7 +323,6 @@ def get_system_status():
 @app.route('/api/temperature', methods=['GET'])
 def get_temperature_data():
     try:
-        # Get time range from query parameter
         range_param = request.args.get('range', '5m')
         start_time, end_time = parse_time_range(range_param)
         
@@ -349,23 +336,19 @@ def get_temperature_data():
         
         query_api = client.query_api()
         
-        # Try different query styles to find temperature data
         queries = [
-            # Try as field
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._field == "temperature")
               |> sort(columns: ["_time"])
             ''',
-            # Try as measurement
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._measurement == "temperature")
               |> sort(columns: ["_time"])
             ''',
-            # Try with partial matching
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
@@ -409,7 +392,6 @@ def get_temperature_data():
 @app.route('/api/pressure', methods=['GET'])
 def get_pressure_data():
     try:
-        # Get time range from query parameter
         range_param = request.args.get('range', '5m')
         start_time, end_time = parse_time_range(range_param)
         
@@ -422,24 +404,22 @@ def get_pressure_data():
         )
         
         query_api = client.query_api()
-        
-        # Try different query styles to find temperature data
+    
+
         queries = [
-            # Try as field
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._field == "pressure_status")
               |> sort(columns: ["_time"])
             ''',
-            # Try as measurement
+
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._measurement == "pressure")
               |> sort(columns: ["_time"])
             ''',
-            # Try with partial matching
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
@@ -467,7 +447,6 @@ def get_pressure_data():
                 data = query_data
                 break
         
-        # If no data found, return sample data for testing
         if len(data) == 0:
             logger.warning("No pressure data found, returning sample data")
             sample_data = generate_sample_temperature_data(start_time, end_time)
@@ -483,7 +462,6 @@ def get_pressure_data():
 @app.route('/api/humidity', methods=['GET'])
 def get_humidity_data():
     try:
-        # Get time range from query parameter
         range_param = request.args.get('range', '5m')
         start_time, end_time = parse_time_range(range_param)
         
@@ -497,23 +475,19 @@ def get_humidity_data():
         
         query_api = client.query_api()
         
-        # Try different query styles to find humidity data
         queries = [
-            # Try as field
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._field == "humidity")
               |> sort(columns: ["_time"])
             ''',
-            # Try as measurement
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
               |> filter(fn: (r) => r._measurement == "humidity")
               |> sort(columns: ["_time"])
             ''',
-            # Try with partial matching
             f'''
             from(bucket: "{BUCKET}")
               |> range(start: {start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {end_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
@@ -541,7 +515,6 @@ def get_humidity_data():
                 data = query_data
                 break
         
-        # If no data found, return sample data for testing
         if len(data) == 0:
             logger.warning("No humidity data found, returning sample data")
             sample_data = generate_sample_humidity_data(start_time, end_time)
@@ -553,12 +526,10 @@ def get_humidity_data():
         logger.error(f"Error in humidity endpoint: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-# Generate sample temperature data for any time range
 def generate_sample_temperature_data(start_time, end_time):
     import random
     data = []
-    
-    # Calculate appropriate interval based on time range
+
     delta_minutes = int((end_time - start_time).total_seconds() / 60)
     
     if delta_minutes <= 5:
@@ -578,7 +549,7 @@ def generate_sample_temperature_data(start_time, end_time):
             break
         
         # Random temperature around 20°C with some variation
-        base_temp = 20 + 2 * (i / max(intervals, 1))  # Slight trend
+        base_temp = 20 + 2 * (i / max(intervals, 1))  
         value = base_temp + random.uniform(-2, 2)
         
         data.append({
@@ -643,8 +614,6 @@ def debug_measurements():
         )
         
         query_api = client.query_api()
-        
-        # Query to get all measurements and fields
         query = f'''
         import "influxdata/influxdb/schema"
         schema.measurements(bucket: "{BUCKET}")
@@ -656,8 +625,6 @@ def debug_measurements():
         for table in result:
             for record in table.records:
                 measurements.append(record.get_value())
-        
-        # Query to get all field keys
         query = f'''
         import "influxdata/influxdb/schema"
         schema.fieldKeys(bucket: "{BUCKET}")

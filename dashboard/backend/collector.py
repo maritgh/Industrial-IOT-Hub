@@ -1,3 +1,6 @@
+# This script Scrapes data from the MQTT broker
+# Then it stores it in the InfluxDB Database
+
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 import paho.mqtt.client as mqtt
@@ -5,10 +8,10 @@ import json
 import time
 
 INFLUX_URL = "http://host.docker.internal:8086"
-TOKEN = "QNU9pj1aTm-fipRW9ZkU5eYvfdAOfVC7pwhX5jdN-lTsx6ZluEIyQyn38oSgRXdG2SSGuVxwnWxPCRFC5wxNvg=="
-ORG = "stedin"
-BUCKET = "data"
-ip_adress = "192.168.178.165" #verander dit naar je ipv4 adress
+TOKEN = "QNU9pj1aTm-fipRW9ZkU5eYvfdAOfVC7pwhX5jdN-lTsx6ZluEIyQyn38oSgRXdG2SSGuVxwnWxPCRFC5wxNvg=="  # Api key created InfluxDB UI
+ORG = "stedin"                                                                                      # Organisation set in InfluxDB UI
+BUCKET = "data"                                                                                     # The bucket wich data is sent to, wich is also set in InfluxDB
+ip_adress = "192.168.178.165"                                                                        #verander dit naar je ipv4 adress
 
 client = InfluxDBClient(url=INFLUX_URL, token=TOKEN, org=ORG)
 write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -26,6 +29,8 @@ while not influx_connected:
         print(f"Waiting for InfluxDB: {e}")
         time.sleep(3)
 
+# when a new message appears in the MQTT broker this function starts
+# a new message appears when the Arduino (emulator) sends data to the MQTT broker
 def on_message(mqtt_client, userdata, msg):
     try:
         data = json.loads(msg.payload)
