@@ -44,8 +44,8 @@ void loop() {
   // Keep MQTT client running (necessary for callbacks & stability)
   client.loop();
   
-  float temp = random(2000, 2100) / 100.0;
-  float hum  = random(4000, 5100) / 100.0;
+  float temp = random(2000, 2100) / 100.0;  //temperature
+  float hum  = random(4000, 5100) / 100.0;  //humidity
   float status = 1.11;  // Added status field
   float pressure = 1000.12;
   
