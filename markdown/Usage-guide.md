@@ -10,7 +10,7 @@ To configure and deploy the IoT Hub system:
 
 For detailed setup steps, wiring diagrams, and code configuration, **please refer to the [Arduino Usage Guide](ArduinoUsage.md)**.
 
-> ⚠️ **Note:** Both the IoT Hub (ESP32s) and the dashboard machine must be connected to the same Wi-Fi network. This ensures that the devices can communicate with each other locally without requiring external routing. Each guide has its own tutorial for this
+> ⚠️ **Note:** Both the IoT Hub (ESP32s) and the dashboard machine must be connected to the same Wi-Fi network. This ensures that the devices can communicate with each other locally without requiring external routing. Each guide has its own tutorial for this. In many cases the IP adresses, and the network name and password will need to be changed in this project code. Eeach guide will cover this
 
 ---
 

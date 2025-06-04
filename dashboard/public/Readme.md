@@ -1,0 +1,2 @@
+This is a dummy website that shows what User Interface for reading data from the IOT-hub could look like. It is hosted on localhost:80
+For the realtime life data website folder head to the /RealTimeDashboard/.. folder
