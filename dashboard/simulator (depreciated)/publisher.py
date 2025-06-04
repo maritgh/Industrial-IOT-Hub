@@ -22,7 +22,7 @@ while True:
     data = {
         "temp": round(random.uniform(20.0, 21.0), 2),   
         "hum": round(random.uniform(40.0, 41.0), 2),
-        "status": round(random.uniform(0, 2), 2),
+        "status": 1.11,
         "pressure": 1000.11
     }
     payload = json.dumps(data)

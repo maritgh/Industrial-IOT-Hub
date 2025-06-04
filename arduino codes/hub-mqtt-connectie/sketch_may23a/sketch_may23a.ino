@@ -7,6 +7,7 @@ const int mqtt_port = 1883;
 const char* mqtt_user = "username";
 const char* mqtt_pass = "henk";
 
+// mqtt 
 // setup clients
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -14,6 +15,11 @@ PubSubClient client(espClient);
 // WiFi gegevens
 const char* ssid = "robotserver";
 const char* password = "henkhenk";
+
+// BLE Device
+BLEDevice pressurePeripheral;
+BLECharacteristic pressureCharacteristic;
+bool pressureConnected = false;
 
 // HTTP server
 WiFiServer server(8080);

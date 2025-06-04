@@ -11,7 +11,9 @@ INFLUX_URL = "http://host.docker.internal:8086"
 TOKEN = "QNU9pj1aTm-fipRW9ZkU5eYvfdAOfVC7pwhX5jdN-lTsx6ZluEIyQyn38oSgRXdG2SSGuVxwnWxPCRFC5wxNvg=="  # Api key created InfluxDB UI
 ORG = "stedin"                                                                                      # Organisation set in InfluxDB UI
 BUCKET = "data"                                                                                     # The bucket wich data is sent to, wich is also set in InfluxDB
-ip_adress = "192.168.178.165"                                                                        #verander dit naar je ipv4 adress
+ip_adress = "192.168.178.165"            
+#        192.168.178.165
+#         172.20.10.14                                          #verander dit naar je ipv4 adress
 
 client = InfluxDBClient(url=INFLUX_URL, token=TOKEN, org=ORG)
 write_api = client.write_api(write_options=SYNCHRONOUS)

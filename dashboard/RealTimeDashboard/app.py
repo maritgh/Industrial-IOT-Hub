@@ -27,6 +27,7 @@ BUCKET = "data"
 def parse_time_range(range_str):
     """Parse time range string to get start and end datetime objects"""
     now = datetime.now(timezone.utc)
+    #now = now1.astimezone(timezone(timedelta(hours=2)))
     
     if range_str == '5m':
         start_time = now - timedelta(minutes=5)
