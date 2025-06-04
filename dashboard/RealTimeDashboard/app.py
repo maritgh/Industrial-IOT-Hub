@@ -366,7 +366,8 @@ def get_temperature_data():
             query_data = []
             for table in result:
                 for record in table.records:
-                    time = record.get_time().strftime("%Y-%m-%d %H:%M:%S")
+                    time_obj_utc = record.get_time() 
+                    time = time_obj_utc.strftime("%Y-%m-%dT%H:%M:%SZ") # <-- CORRECTED LINE
                     value = record.get_value()
                     if value is not None:
                         query_data.append({"time": time, "value": value})
@@ -437,7 +438,8 @@ def get_pressure_data():
             query_data = []
             for table in result:
                 for record in table.records:
-                    time = record.get_time().strftime("%Y-%m-%d %H:%M:%S")
+                    time_obj_utc = record.get_time() 
+                    time = time_obj_utc.strftime("%Y-%m-%dT%H:%M:%SZ") # <-- CORRECTED LINE
                     value = record.get_value()
                     if value is not None:
                         query_data.append({"time": time, "value": value})
@@ -505,7 +507,8 @@ def get_humidity_data():
             query_data = []
             for table in result:
                 for record in table.records:
-                    time = record.get_time().strftime("%Y-%m-%d %H:%M:%S")
+                    time_obj_utc = record.get_time() 
+                    time = time_obj_utc.strftime("%Y-%m-%dT%H:%M:%SZ") # <-- CORRECTED LINE
                     value = record.get_value()
                     if value is not None:
                         query_data.append({"time": time, "value": value})
