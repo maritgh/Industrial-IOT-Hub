@@ -1,6 +1,6 @@
-#include <WiFi.h>
+#include <Arduino.h>
 #include <HTTPClient.h>
-#include "Arduino_NiclaSenseEnv.h"
+#include <Arduino_NiclaSenseEnv.h>
 
 #define SDA_PIN 5
 #define SCL_PIN 6
@@ -60,7 +60,7 @@ void loop() {
             http.begin(serverURL);
             http.addHeader("Content-Type", "application/json");
 
-            String payload = "{\"temperature\":" + String(temperature, 2) + ",\"humidity\":" + String(humidity, 2) + "}";
+            String payload = String(temperature, 2) + "," + String(humidity, 2);
 
             int responseCode = http.POST(payload);
 
