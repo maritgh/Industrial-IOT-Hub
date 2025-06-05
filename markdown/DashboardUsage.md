@@ -141,9 +141,9 @@ This API token is used in [`collector.py`](../dashboard/backend/collector.py) to
 
 For storing data in the database and displaying it, a custom API is used. This API also scrapes data from the database and serves it to the frontend for visualization.
 
-Both the Custom API and the Frontend reside in the `RealTimeDashboard` folder. The folder structure is organized so that all dashboard logic (backend and frontend) is encapsulated in one place for easier maintenance and deployment.
+Both the [Custom API](../dashboard/RealTimeDashboard/app.py) and the [Frontend](../dashboard/RealTimeDashboard/templates/index.html) reside in the `RealTimeDashboard` folder. The folder structure is organized so that all dashboard logic (backend and frontend) is encapsulated in one place for easier maintenance and deployment.
 
-Both the [Custom API](../dashboard/RealTimeDashboard/app.py) and the [Frontend](../dashboard/RealTimeDashboard/templates/index.html) reside in the `RealTimeDashboard` folder.
+
 
 In this script, the token which manages read and write access to the InfluxDB database is stored.
 

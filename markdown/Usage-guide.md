@@ -21,7 +21,7 @@ The dashboard is used to visualize the incoming data from all IoT Hubs in real-t
 To set up the dashboard:
 
 * Clone the repository and navigate to the dashboard folder.
-* Follow the installation instructions to run the frontend (built with \[insert framework if applicable]).
+* Follow the installation instructions to run the frontend.
 * Ensure that the dashboard is connected to the backend server or database receiving data from the IoT Hub.
 * Launch the dashboard in your browser to start monitoring live data.
 
