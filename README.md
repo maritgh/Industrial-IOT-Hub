@@ -90,7 +90,7 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
   1. Developed MQTT integration for secure data transmission to the Mosquitto broker.
   2. Created a Python-based collector to forward data into InfluxDB.
   3. Designed and implemented the InfluxDB time-series database setup.
-  4. Built and styled a real-time dashboard using a Flask API.
+  4. Built and styled a real-time dashboard using a custom Flask API.
   5. Developed a demo dashboard wich makes use of NGIX.
   6. Dockerized all services to ensure consistent and portable deployment.
   7. Created the project architecture and setup documentation, including the main README and usage guides.
