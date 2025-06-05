@@ -95,7 +95,7 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
   4. Built and styled a real-time dashboard using a custom Flask API.
   5. Developed a demo dashboard wich makes use of NGIX.
   6. Dockerized all services to ensure consistent and portable deployment.
-  7. Created the project architecture and setup documentation, including the main README and usage guides.
+  7. Created the project architecture and setup documentation, including the main README and the Dashboard usage guide.
 
 
 
@@ -106,15 +106,7 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
 
 For questions or contributions, please open an issue on GitHub.
 
----
 
 
 
-Designed and implemented the complete data pipeline for an Industrial IoT system:
 
-* Collected environmental sensor data using an ESP32-based IoT hub.
-* Transmitted data securely via MQTT to a Mosquitto broker.
-* Used a Python collector to forward the data into InfluxDB.
-* Built a real-time dashboard powered by a Flask API and served via NGINX.
-* Dockerized all services for consistent deployment
-* Created structured documentation and README for ease of use and replication
