@@ -33,6 +33,16 @@ This project focuses on researching how data collection from these hubs can be d
 ## Repository Structure
 
 The repository is organized into the following folders and files:
+- **[dashboard](dashboard/)**  
+  Contains:
+  * The two Dashboards (Demo Dashboard and RealTimeDashboard)
+  * The database
+  * The API
+  * the Data Collector script
+- **[arduino codes](arduino-codes/)**  
+  Contains:
+    * Source code for the (IoT-HUB) Arduino Portenta Max h7 
+    * Source code for the two ESP32 wich collect data with sensors
 
 - **[images](images)**  
   Contains images and diagrams used in the documentation.
@@ -80,12 +90,13 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
   1. Developed MQTT integration for secure data transmission to the Mosquitto broker.
   2. Created a Python-based collector to forward data into InfluxDB.
   3. Designed and implemented the InfluxDB time-series database setup.
-  4. Built and styled a real-time dashboard using a Flask API, served through NGINX.
-  5. Dockerized all services to ensure consistent and portable deployment.
-  6. Created the project architecture and setup documentation, including the main README and usage guides.
+  4. Built and styled a real-time dashboard using a Flask API.
+  5. Developed a demo dashboard wich makes use of NGIX.
+  6. Dockerized all services to ensure consistent and portable deployment.
+  7. Created the project architecture and setup documentation, including the main README and usage guides.
 
 
-(jullie moeten zelf iets voor jezelf invullen)
+
 - **Femke H.** – Database setup, research, and documentation  
 - **Marit S.** – Arduino design, testing, and documentation  
 - **Subaydah M.** – Arduino setup, testing, frontend integration, and documentation  
