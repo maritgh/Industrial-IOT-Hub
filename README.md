@@ -35,7 +35,9 @@ This project focuses on researching how data collection from these hubs can be d
 The repository is organized into the following folders and files:
 - **[dashboard](dashboard/)**  
   Contains:
-  * The two Dashboards (Demo Dashboard and RealTimeDashboard)
+  * The two Dashboards 
+    * Dashboard 
+    * RealTimeDashboard
   * The database
   * The API
   * the Data Collector script
