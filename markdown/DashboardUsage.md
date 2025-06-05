@@ -1,29 +1,53 @@
-## Dashboard Usage Guide
+# Dashboard Usage Guide
 
 ---
 
 This setup guide explains how to launch the current project, followed by instructions to replicate it yourself.
 
-* [Dashboard Launch](#dashboard-launch)
-* [Dashboard Setup](#dashboard-setup)
+---
+
+## Table of Contents
+- [Launching the Dashboard](#dashboard-launch)
+  - [Cloning the git repository](#cloning-the-git-repository)
+  - [Changing the IP adresses to match your setup](#changing-the-ip-adresses-to-match-your-setup)
+  - [Installing Docker](#installing-docker)
+  - [Lauching the project](#launching-docker)
+    - [The dashboard](#the-dashboard)
+* [Deep dive in the Dashboard Setup](#dashboard-setup)
 
 ---
 
 ## Dashboard Launch
+### Cloning the git repository
+1. Head to the git repository
+2. Click the green ``` <> code ``` and copy the link
+3. Create a new project in your preffered code editor
+4. In the termial type ```git clone "link"```
 
-1. Clone the git repository.
+### Changing the IP adresses to match your setup
+First things first. It is crucial to also change the IP adress on every device
+   * The main host computer that is running the docker container
+   * The Arduino Portenta Max H7 (the main IOT-hub)
+   * The Arduino ESP32's (The devices with attached sensors)
 
-2. Open the terminal and navigate to `Industrial-IOT-Hub/dashboard`.
-
-3. Open [collector.py](../dashboard/backend/collector.py) and change the IP on the line:
+1. Open [collector.py](../dashboard/backend/collector.py) and change the IP on the line:
 
    ```python
-   ip_adress = "192.168.xxx.xxx"
+   ip_adress = "xxx.xxx.xxx.xxx"
    ```
 
    to your own IPv4 address, which can be found by typing `ipconfig` in the terminal.
 
-4. Run:
+
+### Installing docker
+1. Head to ```https://www.docker.com``` 
+2. install docker at the download page
+3. Follow the install wizard
+   
+### Launching Docker
+1. Make sure docker is running
+2. Open the terminal in ```Industrial-IOT-Hub\dashboard\```
+3. Run:
 
    ```bash
    docker-compose build
@@ -31,12 +55,25 @@ This setup guide explains how to launch the current project, followed by instruc
    ```
 
    All containers and the dashboard will be launched.
+#### The dashboard
+Our project contains two dashboard
+   * [Real time dashboard](#real-time-dashboard)
+   The real time dashboard displays live data wich is collected by the IOT-hub in graphs
+   * [Test dashboard](#test-dashboard)
+   This dashboard is an example of what an official stedin website for checking sensor data. Stedin has multible powerstation, hence it should be easy to acces multible different stations, through one dashboard. It also features a login screen
 
-5. To access the dashboard, open the `dashboard-app` container:
+### Real time dashboard
+1. To access the dashboard, open the `dashboard-app` container:
 
    ![Dashboard Access](../images/dashboardip.png)
 
-   This address is where the dashboard is hosted.
+   This address is where the dashboard is hosted, paste it into your browser
+
+### Test dashboard
+
+   ![image](../images/testdashboard.png)
+   The above dashboard primary purpose is to be a clean overview wich can acces all graphs of around the country. It is important to note that this is a demo wich is includes dummy sensor data, rather than live data that is retrieved by the pyhiscal sensors.
+   Acces this dashboard by heading to ```localhost:80``` in your browser
 
 ---
 
@@ -104,6 +141,8 @@ Both the Custom API and the Frontend reside in the RealTimeDashboard folder. The
 
 Both the [Custom API](../dashboard/RealTimeDashboard/app.py) and the [Frontend](../dashboard/RealTimeDashboard/templates/index.html) reside in the `RealTimeDashboard` folder.
 
+In this script the token wich manages read and write acces to the InfluxDB database is stored
+
 The API acts as a secure intermediary between the backend (InfluxDB) and the frontend. Since direct access to InfluxDB requires sensitive credentials (such as an API token), which must be kept secure, the API performs all database queries on behalf of the frontend. This ensures the frontend never exposes any critical secrets or credentials to the browser.
 
 Additionally, the API layer allows you to preprocess, aggregate, and format data before sending it to the frontend. This separation of concerns improves scalability, security, and maintainability of the overall system.
@@ -126,12 +165,16 @@ This [docker-compose.yml](../dashboard/docker-compose.yml) file defines the serv
   * SSL certificates.
   * Nginx config.
   * Static web files.
+*  **Used by:** The DemoDashboard
 
 ### 2. **mosquitto (MQTT Broker)**
 
 * **Purpose:** Handles real-time message passing between the IOT-hub and services.
 * **Ports:** 1883 for standard MQTT, 1884 for alternative use.
 * **Security:** Includes configuration, password, and ACL files. SSL support enabled.
+*  **Used by:** Both the RealTimeDashboard and the DemoDashboard
+
+
 
 ### 3. **dashboard\_app (Flask Dashboard)**
 
