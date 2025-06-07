@@ -52,6 +52,9 @@ The repository is organized into the following folders and files:
 - **[product backlog](markdown/productbacklog.md)** 
 Contains the requirements wich the MVP must fullfill
 
+- **[security rapport](markdown/security.md)** 
+Contains steps taken to secure the project, and shows the known vulnrebilities
+
 - **README.md**  
   This file, providing an overview of the project and instructions on where to find more information.
 
