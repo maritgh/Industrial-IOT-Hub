@@ -49,6 +49,9 @@ The repository is organized into the following folders and files:
 - **[images](images)**  
   Contains images and diagrams used in the documentation.
 
+- **[product backlog](markdown/productbacklog.md)** 
+Contains the requirements wich the MVP must fullfill
+
 - **README.md**  
   This file, providing an overview of the project and instructions on where to find more information.
 
