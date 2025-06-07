@@ -95,7 +95,7 @@ For setup instructions, refer to the [Usage Guide](markdown/Usage-guide.md).
   4. Built and styled a real-time dashboard using a custom Flask API.
   5. Developed a demo dashboard wich makes use of NGIX.
   6. Dockerized all services to ensure consistent and portable deployment.
-  7. Created the project architecture and setup documentation, including the main README and the Dashboard usage guide.
+  7. Created the project architecture and setup documentation, including the main README and the Usage guides.
 
 
 

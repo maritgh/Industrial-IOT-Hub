@@ -79,7 +79,7 @@ Displays live data collected by the IoT-hub in graphs.
 
         This address is where the dashboard is hosted. Paste it into your browser.
 
-* **Test Dashboard:**  ```dashboard/RealTimeDashboard```
+* **Test Dashboard:**  ```dashboard/public/index.html```
 This dashboard is an example of what an official Stedin website for checking sensor data might look like. Stedin has multiple power stations, hence it should be easy to access multiple different stations through one dashboard. It also features a login screen.
 
     ![Test Dashboard Image](../images/testdashboard.png)
