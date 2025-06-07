@@ -71,7 +71,7 @@ First things first: it is crucial to change the IP address on every device:
 Our project contains two dashboards:
 
 
-* **Real-time Dashboard:** ```dashboard/public```
+* **Real-time Dashboard:** ```dashboard/RealTimeDashboard```
 Displays live data collected by the IoT-hub in graphs.
     1.  To access the dashboard, open the `dashboard-app` container:
 
