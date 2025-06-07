@@ -55,7 +55,6 @@ services:
     depends_on:
       - mosquitto
       - influxdb
-  # Add InfluxDB service here
   influxdb:
     image: influxdb:latest
     container_name: influxdb
