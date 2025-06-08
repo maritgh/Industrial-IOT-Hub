@@ -249,7 +249,35 @@ your_json_data_here = """
             },
             "additionalComments": ""
         }
+    },
+    {
+    "timestamp": "2025-06-08T12:26:17.267Z",
+    "userId": "Subaydah",
+    "feedback": {
+      "overallUsability": {
+        "q1_1": 8,
+        "q1_2": 8,
+        "q1_3": 10
+      },
+      "dataVisualization": {
+        "q2_1": 7,
+        "q2_2": 7,
+        "q2_3": 6,
+        "q2_4": 6
+      },
+      "functionalityEfficiency": {
+        "q3_1": 6,
+        "q3_2": 8,
+        "q3_3": 4
+      },
+      "relevanceToStedinGoals": {
+        "q4_1": 8,
+        "q4_2": 7,
+        "q4_3": 6
+      },
+      "additionalComments": ""
     }
+  }
 ]
 """
 
