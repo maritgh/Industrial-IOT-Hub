@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stedin Dashboard Usability Survey</title>
+    <!-- Chart.js CDN for easy charting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 700px; /* Slightly wider for better question display */
+            max-width: 900px; /* Slightly wider for better question display and chart */
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
@@ -120,7 +122,9 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"],
+        input[type="number"],
+        textarea {
             width: calc(100% - 22px);
             padding: 10px;
             margin-top: 5px;
@@ -165,17 +169,42 @@
             background-color: #8e44ad;
         }
 
-        #json-output {
+        #clear-data-btn {
+            background-color: #e74c3c;
+            margin-top: 10px;
+        }
+        #clear-data-btn:hover {
+            background-color: #c0392b;
+        }
+
+        #json-output-container {
             margin-top: 25px;
-            white-space: pre-wrap;
-            background-color: #ecf0f1;
             padding: 20px;
             border: 1px solid #bdc3c7;
             border-radius: 8px;
+            background-color: #ecf0f1;
+        }
+
+        #json-output {
+            white-space: pre-wrap;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.9em;
             max-height: 300px;
             overflow-y: auto;
+        }
+
+        #chart-container {
+            margin-top: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            border-left: 5px solid #f1c40f; /* A different color for the chart section */
+        }
+
+        #chart-container canvas {
+            max-width: 100%;
+            height: 400px; /* Fixed height for consistency */
         }
     </style>
 </head>
@@ -186,7 +215,7 @@
     <p>Please rate each statement on a scale of 1 to 10, where <strong>1 means "Strongly Disagree / Very Poor"</strong> and <strong>10 means "Strongly Agree / Excellent."</strong></p>
 
     <form id="survey-form">
-        <!-- Tester ID -->
+        <!-- User ID -->
         <div class="question-section">
             <div class="question">
                 <label for="user-id">User ID / Name (Optional):</label>
@@ -337,53 +366,191 @@
         </div>
     </form>
 
-    <button type="button" onclick="exportToJson()">Export Survey Data to JSON</button>
+    <button type="button" onclick="exportAndVisualize()">Submit Survey and Update Chart</button>
+    <button id="clear-data-btn" type="button" onclick="clearSurveyData()">Clear All Survey Data</button>
 
-    <h3>Generated JSON Output</h3>
-    <div id="json-output"></div>
-    <button id="copy-btn" onclick="copyJsonToClipboard()">Copy JSON to Clipboard</button>
+    <div id="chart-container">
+        <h3>Average Survey Ratings</h3>
+        <canvas id="surveyChart"></canvas>
+        <p style="text-align: center; font-style: italic; margin-top: 15px;">(Chart updates after each submission and on page load if data exists)</p>
+    </div>
+
+    <div id="json-output-container">
+        <h3>All Submitted Survey Data (JSON)</h3>
+        <div id="json-output"></div>
+        <button id="copy-btn" onclick="copyJsonToClipboard()">Copy All JSON to Clipboard</button>
+    </div>
 
     <script>
         // Array of questions for dynamic slider output updates and JSON export
         const questions = [
-            { id: "q1_1", outputId: "q1_1-output" },
-            { id: "q1_2", outputId: "q1_2-output" },
-            { id: "q1_3", outputId: "q1_3-output" },
-            { id: "q2_1", outputId: "q2_1-output" },
-            { id: "q2_2", outputId: "q2_2-output" },
-            { id: "q2_3", outputId: "q2_3-output" },
-            { id: "q2_4", outputId: "q2_4-output" },
-            { id: "q3_1", outputId: "q3_1-output" },
-            { id: "q3_2", outputId: "q3_2-output" },
-            { id: "q3_3", outputId: "q3_3-output" },
-            { id: "q4_1", outputId: "q4_1-output" },
-            { id: "q4_2", outputId: "q4_2-output" },
-            { id: "q4_3", outputId: "q4_3-output" }
+            { id: "q1_1", outputId: "q1_1-output", label: "1.1 Easy to navigate" },
+            { id: "q1_2", outputId: "q1_2-output", label: "1.2 Multi-device seamless" },
+            { id: "q1_3", outputId: "q1_3-output", label: "1.3 Loading time acceptable" },
+            { id: "q2_1", outputId: "q2_1-output", label: "2.1 Data presented clearly" },
+            { id: "q2_2", outputId: "q2_2-output", label: "2.2 Easy to identify anomalies" },
+            { id: "q2_3", outputId: "q2_3-output", label: "2.3 Hub distinction clear" },
+            { id: "q2_4", outputId: "q2_4-output", label: "2.4 Historical data useful" },
+            { id: "q3_1", outputId: "q3_1-output", label: "3.1 Centralized view improves efficiency" },
+            { id: "q3_2", outputId: "q3_2-output", label: "3.2 Data is up-to-date" },
+            { id: "q3_3", outputId: "q3_3-output", label: "3.3 Reduces issue identification time" },
+            { id: "q4_1", outputId: "q4_1-output", label: "4.1 Aids energy transition" },
+            { id: "q4_2", outputId: "q4_2-output", label: "4.2 Helps network stability" },
+            { id: "q4_3", outputId: "q4_3-output", label: "4.3 Enhances network efficiency" }
         ];
 
-        // Attach event listeners to update slider outputs
-        questions.forEach(({ id, outputId }) => {
-            const slider = document.getElementById(id);
-            const output = document.getElementById(outputId);
-            if (slider && output) {
-                slider.oninput = () => {
-                    output.textContent = slider.value;
-                };
-                // Set initial value on load
-                output.textContent = slider.value;
-            }
-        });
+        let surveyChartInstance = null; // To hold the Chart.js instance
 
-        // Function to export data to JSON
-        function exportToJson() {
-            // Get values from the form
+        // Function to update displayed values when sliders are moved
+        function updateSliderOutputs() {
+            questions.forEach(({ id, outputId }) => {
+                const slider = document.getElementById(id);
+                const output = document.getElementById(outputId);
+                if (slider && output) {
+                    slider.oninput = () => {
+                        output.textContent = slider.value;
+                    };
+                    // Set initial value on load
+                    output.textContent = slider.value;
+                }
+            });
+        }
+
+        // Function to load all survey data from localStorage
+        function loadSurveyData() {
+            try {
+                const storedData = localStorage.getItem('stin_dashboard_survey_responses');
+                return storedData ? JSON.parse(storedData) : [];
+            } catch (e) {
+                console.error("Error loading survey data from localStorage:", e);
+                return [];
+            }
+        }
+
+        // Function to save survey data to localStorage
+        function saveSurveyData(data) {
+            try {
+                localStorage.setItem('stin_dashboard_survey_responses', JSON.stringify(data));
+            } catch (e) {
+                console.error("Error saving survey data to localStorage:", e);
+            }
+        }
+
+        // Function to process raw survey data into averages
+        function processSurveyData(responses) {
+            if (responses.length === 0) {
+                return { labels: questions.map(q => q.label), averages: [], count: 0 };
+            }
+
+            const totalScores = {};
+            questions.forEach(q => {
+                totalScores[q.id] = 0;
+            });
+
+            responses.forEach(response => {
+                // Safely access nested properties
+                const feedback = response.feedback;
+                if (!feedback) return;
+
+                if (feedback.overallUsability) {
+                    totalScores.q1_1 += (feedback.overallUsability.q1_1 || 0);
+                    totalScores.q1_2 += (feedback.overallUsability.q1_2 || 0);
+                    totalScores.q1_3 += (feedback.overallUsability.q1_3 || 0);
+                }
+                if (feedback.dataVisualization) {
+                    totalScores.q2_1 += (feedback.dataVisualization.q2_1 || 0);
+                    totalScores.q2_2 += (feedback.dataVisualization.q2_2 || 0);
+                    totalScores.q2_3 += (feedback.dataVisualization.q2_3 || 0);
+                    totalScores.q2_4 += (feedback.dataVisualization.q2_4 || 0);
+                }
+                if (feedback.functionalityEfficiency) {
+                    totalScores.q3_1 += (feedback.functionalityEfficiency.q3_1 || 0);
+                    totalScores.q3_2 += (feedback.functionalityEfficiency.q3_2 || 0);
+                    totalScores.q3_3 += (feedback.functionalityEfficiency.q3_3 || 0);
+                }
+                if (feedback.relevanceToStedinGoals) {
+                    totalScores.q4_1 += (feedback.relevanceToStedinGoals.q4_1 || 0);
+                    totalScores.q4_2 += (feedback.relevanceToStedinGoals.q4_2 || 0);
+                    totalScores.q4_3 += (feedback.relevanceToStedinGoals.q4_3 || 0);
+                }
+            });
+
+            const averages = questions.map(q => {
+                return (totalScores[q.id] / responses.length).toFixed(2); // Average with 2 decimal places
+            });
+
+            return {
+                labels: questions.map(q => q.label),
+                averages: averages,
+                count: responses.length
+            };
+        }
+
+        // Function to render or update the Chart.js graph
+        function renderChart(processedData) {
+            const ctx = document.getElementById('surveyChart').getContext('2d');
+
+            if (surveyChartInstance) {
+                surveyChartInstance.destroy(); // Destroy previous chart instance
+            }
+
+            surveyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: processedData.labels,
+                    datasets: [{
+                        label: `Average Rating (${processedData.count} submissions)`,
+                        data: processedData.averages,
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)', // Blue color
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allows flexible height based on container
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Average Score (1-10)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Question'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to export data, save it, and re-render the chart
+        function exportAndVisualize() {
             const userId = document.getElementById("user-id").value;
             const comments = document.getElementById("comments").value;
 
-            // Create data object
-            const data = {
+            // Get current slider values
+            const currentSubmission = {
                 timestamp: new Date().toISOString(),
-                userId: userId || "N/A", // Optional user ID
+                userId: userId || "N/A",
                 feedback: {
                     overallUsability: {
                         q1_1: parseInt(document.getElementById("q1_1").value),
@@ -410,36 +577,56 @@
                 }
             };
 
-            // Display JSON data on the page
-            document.getElementById("json-output").textContent = JSON.stringify(data, null, 2);
+            // Load existing data, add new submission, save, and update display
+            const allResponses = loadSurveyData();
+            allResponses.push(currentSubmission);
+            saveSurveyData(allResponses);
+
+            // Display all raw JSON data
+            document.getElementById("json-output").textContent = JSON.stringify(allResponses, null, 2);
+
+            // Process and visualize data
+            const processedData = processSurveyData(allResponses);
+            renderChart(processedData);
+
+            // Optionally, clear the form after submission
+            document.getElementById("survey-form").reset();
+            updateSliderOutputs(); // Reset slider text
         }
 
-        // Function to copy the generated JSON to the clipboard
+        // Function to copy all generated JSON to the clipboard
         function copyJsonToClipboard() {
             const jsonOutput = document.getElementById("json-output").textContent;
-
-            // Create a temporary text area element to copy the content
             const textarea = document.createElement("textarea");
             textarea.value = jsonOutput;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand("copy");
             document.body.removeChild(textarea);
-
-            // Using a simple alert for confirmation as per existing pattern.
-            // For a production app, consider a more user-friendly modal or toast message.
-            alert("JSON copied to clipboard!");
+            alert("All survey JSON data copied to clipboard!");
         }
 
-        // Initialize slider outputs on page load
-        window.onload = function() {
-            questions.forEach(({ id, outputId }) => {
-                const slider = document.getElementById(id);
-                const output = document.getElementById(outputId);
-                if (slider && output) {
-                    output.textContent = slider.value; // Set initial text
+        // Function to clear all survey data from localStorage
+        function clearSurveyData() {
+            if (confirm("Are you sure you want to clear ALL stored survey data? This cannot be undone.")) {
+                localStorage.removeItem('stin_dashboard_survey_responses');
+                document.getElementById("json-output").textContent = "No survey data submitted yet.";
+                if (surveyChartInstance) {
+                    surveyChartInstance.destroy(); // Destroy current chart
+                    surveyChartInstance = null; // Clear the instance
                 }
-            });
+                renderChart(processSurveyData([])); // Render an empty chart
+                alert("All survey data has been cleared.");
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            updateSliderOutputs();
+            const allResponses = loadSurveyData();
+            document.getElementById("json-output").textContent = allResponses.length > 0 ? JSON.stringify(allResponses, null, 2) : "No survey data submitted yet.";
+            const processedData = processSurveyData(allResponses);
+            renderChart(processedData);
         };
     </script>
 </body>
